@@ -1,0 +1,121 @@
+syntax = "proto3";
+
+package stego.v1;
+
+option go_package = "github.com/cy/stegochat/proto";
+
+// StegoService provides steganographic encoding/decoding capabilities
+service StegoService {
+  // Session management
+  rpc CreateSession(CreateSessionRequest) returns (Session);
+  rpc GetSession(GetSessionRequest) returns (Session);
+  rpc ListSessions(ListSessionsRequest) returns (ListSessionsResponse);
+  
+  // Key exchange
+  rpc InitiateKeyExchange(InitiateKeyExchangeRequest) returns (InitiateKeyExchangeResponse);
+  rpc CompleteKeyExchange(CompleteKeyExchangeRequest) returns (CompleteKeyExchangeResponse);
+  
+  // Messaging
+  rpc EncodeMessage(EncodeMessageRequest) returns (EncodeMessageResponse);
+  rpc DecodeMessage(DecodeMessageRequest) returns (DecodeMessageResponse);
+  
+  // Deniability
+  rpc AddDecoyKey(AddDecoyKeyRequest) returns (AddDecoyKeyResponse);
+}
+
+// ==================== Session Management ====================
+
+message CreateSessionRequest {
+  string peer_id = 1;        // Identifier for the other party
+  string display_name = 2;   // Human-readable name for the session
+}
+
+message GetSessionRequest {
+  string session_id = 1;
+}
+
+message ListSessionsRequest {
+  int32 limit = 1;
+  int32 offset = 2;
+}
+
+message ListSessionsResponse {
+  repeated Session sessions = 1;
+  int32 total = 2;
+}
+
+message Session {
+  string id = 1;
+  string peer_id = 2;
+  string display_name = 3;
+  SessionState state = 4;
+  int64 created_at = 5;      // Unix timestamp
+  int64 updated_at = 6;      // Unix timestamp
+}
+
+enum SessionState {
+  SESSION_STATE_UNSPECIFIED = 0;
+  SESSION_STATE_PENDING_KEY_EXCHANGE = 1;
+  SESSION_STATE_ACTIVE = 2;
+  SESSION_STATE_EXPIRED = 3;
+}
+
+// ==================== Key Exchange ====================
+
+message InitiateKeyExchangeRequest {
+  string session_id = 1;
+}
+
+message InitiateKeyExchangeResponse {
+  bytes public_key = 1;      // Our X25519 public key to share with peer
+  string key_exchange_id = 2;
+}
+
+message CompleteKeyExchangeRequest {
+  string session_id = 1;
+  bytes peer_public_key = 2; // Peer's X25519 public key
+}
+
+message CompleteKeyExchangeResponse {
+  bool success = 1;
+  string error_message = 2;
+}
+
+// ==================== Messaging ====================
+
+message EncodeMessageRequest {
+  string session_id = 1;
+  string secret_message = 2;      // Max ~30 chars recommended
+  string topic_hint = 3;          // User-provided cover topic
+  string decoy_message = 4;       // Optional: for deniability
+}
+
+message EncodeMessageResponse {
+  string cover_text = 1;          // Natural-looking text to send
+  int32 bits_encoded = 2;
+  string message_id = 3;
+}
+
+message DecodeMessageRequest {
+  string session_id = 1;
+  string cover_text = 2;
+  bytes decoy_key = 3;            // Optional: if using deniable decryption
+}
+
+message DecodeMessageResponse {
+  string secret_message = 1;
+  bool is_decoy = 2;              // True if decoy key was used
+  string message_id = 3;
+}
+
+// ==================== Deniability ====================
+
+message AddDecoyKeyRequest {
+  string session_id = 1;
+  string decoy_message = 2;       // What this key should decrypt to
+}
+
+message AddDecoyKeyResponse {
+  bytes decoy_key = 1;            // Key that decrypts to a different message
+  string decoy_key_id = 2;
+}
