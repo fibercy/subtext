@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/cy/stegochat/internal/crypto"
+	"github.com/cy/stegochat/internal/deniable"
 	"github.com/cy/stegochat/internal/llm"
 	"github.com/cy/stegochat/internal/stego"
 	"github.com/cy/stegochat/internal/store"
@@ -212,16 +213,43 @@ func (s *StegoServer) EncodeMessage(ctx context.Context, req *pb.EncodeMessageRe
 		return nil, status.Error(codes.FailedPrecondition, "key exchange not completed")
 	}
 
-	// Encrypt the message
-	ciphertext, err := crypto.EncryptWithKey(keys.SharedKey, []byte(req.SecretMessage))
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "encryption failed: %v", err)
+	var payload []byte
+	var decoyKeyToStore []byte
+
+	// Check if deniable encryption is requested
+	if req.DecoyMessage != "" {
+		// Use deniable encryption
+		enc := deniable.New()
+		msg := deniable.Message{
+			RealMessage:  req.SecretMessage,
+			DecoyMessage: req.DecoyMessage,
+		}
+
+		result, err := enc.Encrypt(keys.SharedKey, msg)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "deniable encryption failed: %v", err)
+		}
+
+		payload = result.Ciphertext
+		decoyKeyToStore = result.DecoyKey
+
+		// Store the decoy key for later retrieval
+		if err := s.store.AddDecoyKey(req.SessionId, decoyKeyToStore, req.DecoyMessage); err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to store decoy key: %v", err)
+		}
+	} else {
+		// Standard encryption
+		ciphertext, err := crypto.EncryptWithKey(keys.SharedKey, []byte(req.SecretMessage))
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "encryption failed: %v", err)
+		}
+		payload = ciphertext
 	}
 
 	// Check if LLM encoder is available
 	if s.encoder == nil {
 		// Fallback: return placeholder with bit count
-		bitsToEncode := len(ciphertext) * 8
+		bitsToEncode := len(payload) * 8
 		return &pb.EncodeMessageResponse{
 			CoverText:   "[LLM not configured - start Ollama with llama3.1:8b]",
 			BitsEncoded: int32(bitsToEncode),
@@ -229,13 +257,13 @@ func (s *StegoServer) EncodeMessage(ctx context.Context, req *pb.EncodeMessageRe
 		}, nil
 	}
 
-	// Use LLM to generate cover text that embeds the ciphertext
+	// Use LLM to generate cover text that embeds the payload
 	topic := req.TopicHint
 	if topic == "" {
 		topic = "weekend plans"
 	}
 
-	result, err := s.encoder.Encode(ctx, ciphertext, topic)
+	result, err := s.encoder.Encode(ctx, payload, topic)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "encoding failed: %v", err)
 	}
@@ -296,8 +324,19 @@ func (s *StegoServer) DecodeMessage(ctx context.Context, req *pb.DecodeMessageRe
 		return nil, status.Error(codes.InvalidArgument, "invalid cover text or corrupted message")
 	}
 
-	// Decrypt the extracted payload
-	plaintext, err := crypto.DecryptWithKey(decryptKey, result.EncryptedPayload)
+	// Try deniable decryption first (works for both deniable and standard messages)
+	dec := deniable.New()
+	plaintext, wasDecoy, err := dec.Decrypt(result.EncryptedPayload, decryptKey)
+	if err == nil {
+		return &pb.DecodeMessageResponse{
+			SecretMessage: plaintext,
+			IsDecoy:       wasDecoy,
+			MessageId:     uuid.New().String(),
+		}, nil
+	}
+
+	// Fallback: try standard decryption for messages without deniable headers
+	standardPlaintext, err := crypto.DecryptWithKey(decryptKey, result.EncryptedPayload)
 	if err != nil {
 		if isDecoy {
 			return nil, status.Error(codes.InvalidArgument, "decoy key does not match this message")
@@ -306,7 +345,7 @@ func (s *StegoServer) DecodeMessage(ctx context.Context, req *pb.DecodeMessageRe
 	}
 
 	return &pb.DecodeMessageResponse{
-		SecretMessage: string(plaintext),
+		SecretMessage: string(standardPlaintext),
 		IsDecoy:       isDecoy,
 		MessageId:     uuid.New().String(),
 	}, nil

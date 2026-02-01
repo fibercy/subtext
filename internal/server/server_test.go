@@ -286,3 +286,53 @@ func TestAddDecoyKey(t *testing.T) {
 		t.Error("DecoyKeyId should not be empty")
 	}
 }
+
+func TestEncodeDeniableMessage(t *testing.T) {
+	client, cleanup := setupTestServer(t)
+	defer cleanup()
+
+	ctx := context.Background()
+
+	// Create and set up a session with key exchange
+	session, _ := client.CreateSession(ctx, &pb.CreateSessionRequest{
+		PeerId:      "bob",
+		DisplayName: "Bob",
+	})
+
+	// Create "Bob's" session to get a public key to exchange
+	bobSession, _ := client.CreateSession(ctx, &pb.CreateSessionRequest{
+		PeerId:      "alice",
+		DisplayName: "Alice",
+	})
+	bobKey, _ := client.InitiateKeyExchange(ctx, &pb.InitiateKeyExchangeRequest{
+		SessionId: bobSession.Id,
+	})
+
+	// Complete key exchange
+	client.CompleteKeyExchange(ctx, &pb.CompleteKeyExchangeRequest{
+		SessionId:     session.Id,
+		PeerPublicKey: bobKey.PublicKey,
+	})
+
+	// Encode a deniable message (with decoy)
+	encodeResp, err := client.EncodeMessage(ctx, &pb.EncodeMessageRequest{
+		SessionId:     session.Id,
+		SecretMessage: "Meet at dock 7",
+		DecoyMessage:  "Coffee tomorrow?",
+		TopicHint:     "weekend plans",
+	})
+	if err != nil {
+		t.Fatalf("EncodeMessage with decoy failed: %v", err)
+	}
+
+	// Should get a response (placeholder since no LLM)
+	if encodeResp.CoverText == "" {
+		t.Error("CoverText should not be empty")
+	}
+	if encodeResp.MessageId == "" {
+		t.Error("MessageId should not be empty")
+	}
+
+	// Bits should be larger since deniable encryption has overhead
+	t.Logf("Deniable encode response: cover=%s, bits=%d", encodeResp.CoverText, encodeResp.BitsEncoded)
+}
