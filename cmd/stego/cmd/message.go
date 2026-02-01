@@ -41,6 +41,12 @@ Examples:
 			exitError("encoding failed", err)
 		}
 
+		raw, _ := cmd.Flags().GetBool("raw")
+		if raw {
+			fmt.Print(resp.CoverText)
+			return
+		}
+
 		fmt.Println("═══════════════════════════════════════")
 		fmt.Println("COVER TEXT (send this to your peer):")
 		fmt.Println("───────────────────────────────────────")
@@ -143,6 +149,7 @@ func init() {
 
 	encodeCmd.Flags().StringP("decoy", "d", "", "Decoy message for deniable encryption")
 	encodeCmd.Flags().StringP("topic", "t", "casual chat", "Topic hint for cover text generation")
+	encodeCmd.Flags().Bool("raw", false, "Output only the cover text (for scripting)")
 	decodeCmd.Flags().StringP("decoy-key", "k", "", "Decoy key (hex) for deniable decryption")
 }
 
