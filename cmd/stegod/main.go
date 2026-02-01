@@ -2,6 +2,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -10,7 +11,9 @@ import (
 	"os/signal"
 	"path/filepath"
 	"syscall"
+	"time"
 
+	"github.com/cy/stegochat/internal/llm"
 	"github.com/cy/stegochat/internal/server"
 	"github.com/cy/stegochat/internal/store"
 	pb "github.com/cy/stegochat/proto"
@@ -19,8 +22,10 @@ import (
 )
 
 var (
-	port    = flag.Int("port", 50051, "The server port")
-	dataDir = flag.String("data-dir", "", "Data directory (default: ~/.stegochat)")
+	port      = flag.Int("port", 50051, "The server port")
+	dataDir   = flag.String("data-dir", "", "Data directory (default: ~/.stegochat)")
+	ollamaURL = flag.String("ollama-url", "http://localhost:11434", "Ollama API URL")
+	model     = flag.String("model", "llama3.1:8b", "LLM model to use")
 )
 
 func main() {
@@ -51,6 +56,26 @@ func main() {
 
 	log.Printf("Using database: %s", dbPath)
 
+	// Initialize LLM client
+	llmClient := llm.NewClient(
+		llm.WithBaseURL(*ollamaURL),
+		llm.WithModel(*model),
+	)
+
+	// Check if Ollama is available
+	var serverOpts []server.ServerOption
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := llmClient.Ping(ctx); err != nil {
+		log.Printf("WARNING: Ollama not available at %s: %v", *ollamaURL, err)
+		log.Printf("Steganographic encoding/decoding will be disabled.")
+		log.Printf("To enable, start Ollama with: ollama run %s", *model)
+	} else {
+		log.Printf("Connected to Ollama at %s (model: %s)", *ollamaURL, *model)
+		serverOpts = append(serverOpts, server.WithLLMClient(llmClient))
+	}
+
 	// Create gRPC server
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
@@ -58,7 +83,7 @@ func main() {
 	}
 
 	grpcServer := grpc.NewServer()
-	stegoServer := server.New(st)
+	stegoServer := server.New(st, serverOpts...)
 	pb.RegisterStegoServiceServer(grpcServer, stegoServer)
 
 	// Enable reflection for development (allows grpcurl, etc.)

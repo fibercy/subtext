@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/cy/stegochat/internal/crypto"
+	"github.com/cy/stegochat/internal/llm"
+	"github.com/cy/stegochat/internal/stego"
 	"github.com/cy/stegochat/internal/store"
 	pb "github.com/cy/stegochat/proto"
 	"github.com/google/uuid"
@@ -16,12 +18,29 @@ import (
 // StegoServer implements the StegoService gRPC server
 type StegoServer struct {
 	pb.UnimplementedStegoServiceServer
-	store *store.Store
+	store   *store.Store
+	encoder *stego.Encoder
+	decoder *stego.Decoder
+}
+
+// ServerOption configures the server
+type ServerOption func(*StegoServer)
+
+// WithLLMClient sets the LLM client for encoding/decoding
+func WithLLMClient(client *llm.Client) ServerOption {
+	return func(s *StegoServer) {
+		s.encoder = stego.NewEncoder(client)
+		s.decoder = stego.NewDecoder(client)
+	}
 }
 
 // New creates a new StegoServer
-func New(s *store.Store) *StegoServer {
-	return &StegoServer{store: s}
+func New(st *store.Store, opts ...ServerOption) *StegoServer {
+	s := &StegoServer{store: st}
+	for _, opt := range opts {
+		opt(s)
+	}
+	return s
 }
 
 // CreateSession creates a new session with a peer
@@ -177,8 +196,8 @@ func (s *StegoServer) EncodeMessage(ctx context.Context, req *pb.EncodeMessageRe
 	if req.SecretMessage == "" {
 		return nil, status.Error(codes.InvalidArgument, "secret_message is required")
 	}
-	if len(req.SecretMessage) > 100 {
-		return nil, status.Error(codes.InvalidArgument, "secret_message too long (max 100 chars)")
+	if len(req.SecretMessage) > 64 {
+		return nil, status.Error(codes.InvalidArgument, "secret_message too long (max 64 chars)")
 	}
 
 	// Get the shared key
@@ -199,13 +218,31 @@ func (s *StegoServer) EncodeMessage(ctx context.Context, req *pb.EncodeMessageRe
 		return nil, status.Errorf(codes.Internal, "encryption failed: %v", err)
 	}
 
-	// TODO: Phase 2 - Use LLM to generate cover text that embeds the ciphertext
-	// For now, return a placeholder indicating the bits that need to be encoded
-	bitsToEncode := len(ciphertext) * 8
+	// Check if LLM encoder is available
+	if s.encoder == nil {
+		// Fallback: return placeholder with bit count
+		bitsToEncode := len(ciphertext) * 8
+		return &pb.EncodeMessageResponse{
+			CoverText:   "[LLM not configured - start Ollama with llama3.1:8b]",
+			BitsEncoded: int32(bitsToEncode),
+			MessageId:   uuid.New().String(),
+		}, nil
+	}
+
+	// Use LLM to generate cover text that embeds the ciphertext
+	topic := req.TopicHint
+	if topic == "" {
+		topic = "weekend plans"
+	}
+
+	result, err := s.encoder.Encode(ctx, ciphertext, topic)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "encoding failed: %v", err)
+	}
 
 	return &pb.EncodeMessageResponse{
-		CoverText:   "[LLM cover text generation not yet implemented]",
-		BitsEncoded: int32(bitsToEncode),
+		CoverText:   result.CoverText,
+		BitsEncoded: int32(result.BitsEncoded),
 		MessageId:   uuid.New().String(),
 	}, nil
 }
@@ -240,12 +277,36 @@ func (s *StegoServer) DecodeMessage(ctx context.Context, req *pb.DecodeMessageRe
 		return nil, status.Error(codes.FailedPrecondition, "key exchange not completed")
 	}
 
-	// TODO: Phase 2 - Extract bits from cover text using LLM
-	// For now, return a placeholder
-	_ = decryptKey // Will be used for decryption in Phase 2
+	// Check if LLM decoder is available
+	if s.decoder == nil {
+		return &pb.DecodeMessageResponse{
+			SecretMessage: "[LLM not configured - start Ollama with llama3.1:8b]",
+			IsDecoy:       isDecoy,
+			MessageId:     uuid.New().String(),
+		}, nil
+	}
+
+	// Use LLM to extract bits from cover text
+	result, err := s.decoder.Decode(ctx, req.CoverText, "weekend plans")
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "decoding failed: %v", err)
+	}
+
+	if !result.Valid {
+		return nil, status.Error(codes.InvalidArgument, "invalid cover text or corrupted message")
+	}
+
+	// Decrypt the extracted payload
+	plaintext, err := crypto.DecryptWithKey(decryptKey, result.EncryptedPayload)
+	if err != nil {
+		if isDecoy {
+			return nil, status.Error(codes.InvalidArgument, "decoy key does not match this message")
+		}
+		return nil, status.Errorf(codes.Internal, "decryption failed: %v", err)
+	}
 
 	return &pb.DecodeMessageResponse{
-		SecretMessage: "[LLM-based decoding not yet implemented]",
+		SecretMessage: string(plaintext),
 		IsDecoy:       isDecoy,
 		MessageId:     uuid.New().String(),
 	}, nil
