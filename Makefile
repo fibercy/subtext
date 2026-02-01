@@ -1,7 +1,7 @@
-.PHONY: all proto build test clean run
+.PHONY: all proto build build-cli build-all test clean run
 
 # Default target
-all: proto build
+all: proto build-all
 
 # Generate protobuf code
 proto:
@@ -15,6 +15,14 @@ proto:
 build:
 	@echo "Building stegod..."
 	go build -o bin/stegod ./cmd/stegod
+
+# Build the CLI
+build-cli:
+	@echo "Building stego CLI..."
+	go build -o bin/stego ./cmd/stego
+
+# Build all binaries
+build-all: build build-cli
 
 # Run tests
 test:
