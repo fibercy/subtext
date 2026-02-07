@@ -238,8 +238,8 @@ func (s *StegoServer) EncodeMessage(ctx context.Context, req *pb.EncodeMessageRe
 			return nil, status.Errorf(codes.Internal, "failed to store decoy key: %v", err)
 		}
 	} else {
-		// Standard encryption
-		ciphertext, err := crypto.EncryptWithKey(keys.SharedKey, []byte(req.SecretMessage))
+		// Standard encryption with reduced overhead
+		ciphertext, err := crypto.CompactEncrypt(keys.SharedKey, []byte(req.SecretMessage))
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "encryption failed: %v", err)
 		}
@@ -335,8 +335,8 @@ func (s *StegoServer) DecodeMessage(ctx context.Context, req *pb.DecodeMessageRe
 		}, nil
 	}
 
-	// Fallback: try standard decryption for messages without deniable headers
-	standardPlaintext, err := crypto.DecryptWithKey(decryptKey, result.EncryptedPayload)
+	// Fallback: try compact decryption for messages without deniable headers
+	standardPlaintext, err := crypto.CompactDecrypt(decryptKey, result.EncryptedPayload)
 	if err != nil {
 		if isDecoy {
 			return nil, status.Error(codes.InvalidArgument, "decoy key does not match this message")

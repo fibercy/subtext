@@ -1,0 +1,2 @@
+Write a short, blunt chat message about {{TOPIC}}. Use sloppy texting habits: lowercase, no punctuation, abbreviations (u, msg, rly, etc), and sentence fragments. Don't be polite or formal. Keep it very mundane and worldly. Make it sound like a quick text sent while walking. No preamble, just the raw text:
+

@@ -1,6 +1,4 @@
-2026/02/01 16:52:04 Using database: /Users/cy/.stegochat/stegochat.db
-2026/02/01 16:52:04 WARNING: Ollama not available at http://localhost:11434: ollama not reachable: Get "http://localhost:11434/api/tags": dial tcp [::1]:11434: connect: connection refused
-2026/02/01 16:52:04 Steganographic encoding/decoding will be disabled.
-2026/02/01 16:52:04 To enable, start Ollama with: ollama run llama3.1:8b
-2026/02/01 16:52:04 Stego daemon listening on port 50051
-2026/02/01 16:52:07 Shutting down server...
+2026/02/07 16:50:52 Using database: /Users/cy/.stegochat/stegochat.db
+2026/02/07 16:50:52 Connected to Ollama at http://localhost:11434 (model: llama3.1:8b)
+2026/02/07 16:50:52 Stego daemon listening on port 50051
+2026/02/07 16:50:55 Shutting down server...

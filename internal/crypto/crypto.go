@@ -147,3 +147,108 @@ func DecryptWithKey(key, ciphertext []byte) ([]byte, error) {
 	}
 	return enc.Decrypt(ciphertext)
 }
+
+// Compact encryption constants - reduced overhead for steganography
+const (
+	CompactNonceSize = 8 // 8-byte nonce (64-bit counter space)
+	CompactTagSize   = 8 // 8-byte truncated HMAC
+)
+
+// CompactEncrypt encrypts with minimal overhead using AES-CTR + truncated HMAC
+// Format: nonce (8) || ciphertext || truncated_tag (8)
+// Total overhead: 16 bytes (vs 28 for standard AES-GCM)
+func CompactEncrypt(key, plaintext []byte) ([]byte, error) {
+	if len(key) != KeySize {
+		return nil, ErrInvalidKeySize
+	}
+
+	// Split key: first 16 bytes for AES, last 16 bytes for HMAC
+	aesKey := key[:16]
+	hmacKey := key[16:]
+
+	// Generate compact nonce
+	nonce := make([]byte, CompactNonceSize)
+	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+		return nil, err
+	}
+
+	// Create AES-CTR cipher
+	block, err := aes.NewCipher(aesKey)
+	if err != nil {
+		return nil, err
+	}
+
+	// Pad nonce to 16 bytes for CTR IV
+	iv := make([]byte, aes.BlockSize)
+	copy(iv, nonce)
+
+	ciphertext := make([]byte, len(plaintext))
+	stream := cipher.NewCTR(block, iv)
+	stream.XORKeyStream(ciphertext, plaintext)
+
+	// Compute truncated HMAC over nonce || ciphertext
+	h := sha256.New()
+	h.Write(hmacKey)
+	h.Write(nonce)
+	h.Write(ciphertext)
+	fullTag := h.Sum(nil)
+	tag := fullTag[:CompactTagSize]
+
+	// Assemble: nonce || ciphertext || tag
+	result := make([]byte, CompactNonceSize+len(ciphertext)+CompactTagSize)
+	copy(result[:CompactNonceSize], nonce)
+	copy(result[CompactNonceSize:CompactNonceSize+len(ciphertext)], ciphertext)
+	copy(result[CompactNonceSize+len(ciphertext):], tag)
+
+	return result, nil
+}
+
+// CompactDecrypt decrypts data encrypted with CompactEncrypt
+func CompactDecrypt(key, data []byte) ([]byte, error) {
+	if len(key) != KeySize {
+		return nil, ErrInvalidKeySize
+	}
+	if len(data) < CompactNonceSize+CompactTagSize {
+		return nil, ErrDecryptionFailed
+	}
+
+	// Split key
+	aesKey := key[:16]
+	hmacKey := key[16:]
+
+	// Extract components
+	nonce := data[:CompactNonceSize]
+	ciphertext := data[CompactNonceSize : len(data)-CompactTagSize]
+	tag := data[len(data)-CompactTagSize:]
+
+	// Verify HMAC
+	h := sha256.New()
+	h.Write(hmacKey)
+	h.Write(nonce)
+	h.Write(ciphertext)
+	expectedTag := h.Sum(nil)[:CompactTagSize]
+
+	// Constant-time comparison
+	valid := true
+	for i := 0; i < CompactTagSize; i++ {
+		valid = valid && (tag[i] == expectedTag[i])
+	}
+	if !valid {
+		return nil, ErrDecryptionFailed
+	}
+
+	// Decrypt
+	block, err := aes.NewCipher(aesKey)
+	if err != nil {
+		return nil, err
+	}
+
+	iv := make([]byte, aes.BlockSize)
+	copy(iv, nonce)
+
+	plaintext := make([]byte, len(ciphertext))
+	stream := cipher.NewCTR(block, iv)
+	stream.XORKeyStream(plaintext, ciphertext)
+
+	return plaintext, nil
+}

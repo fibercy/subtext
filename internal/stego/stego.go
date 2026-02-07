@@ -7,6 +7,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"hash/fnv"
+	"os"
 	"strings"
 
 	"github.com/cy/stegochat/internal/llm"
@@ -14,13 +15,11 @@ import (
 
 const (
 	// BitsPerDecision is the number of bits encoded per token decision
-	BitsPerDecision = 2
+	BitsPerDecision = 4
 	// NumCandidates is 2^BitsPerDecision
 	NumCandidates = 1 << BitsPerDecision
 	// MaxSecretLength is the maximum secret message length in bytes
 	MaxSecretLength = 64
-	// HeaderSize is the size of the embedded header (length + checksum)
-	HeaderSize = 4
 )
 
 // Encoder handles steganographic encoding of messages into cover text
@@ -46,14 +45,13 @@ func (e *Encoder) Encode(ctx context.Context, encryptedPayload []byte, topic str
 		return nil, fmt.Errorf("payload too large: %d bytes (max %d)", len(encryptedPayload), MaxSecretLength)
 	}
 
-	// Prepare payload with header: [length (2 bytes)] [checksum (2 bytes)] [data]
-	header := make([]byte, HeaderSize)
-	binary.BigEndian.PutUint16(header[0:2], uint16(len(encryptedPayload)))
-	checksum := computeChecksum(encryptedPayload)
-	binary.BigEndian.PutUint16(header[2:4], checksum)
+	// Encode the encrypted payload directly (compact crypto has built-in integrity)
+	// Add length prefix for decoding (2 bytes)
+	payloadWithLen := make([]byte, 2+len(encryptedPayload))
+	binary.BigEndian.PutUint16(payloadWithLen[0:2], uint16(len(encryptedPayload)))
+	copy(payloadWithLen[2:], encryptedPayload)
 
-	fullPayload := append(header, encryptedPayload...)
-	bits := bytesToBits(fullPayload)
+	bits := bytesToBits(payloadWithLen)
 
 	// Build the prompt for cover text generation
 	prompt := buildPrompt(topic)
@@ -71,60 +69,83 @@ func (e *Encoder) Encode(ctx context.Context, encryptedPayload []byte, topic str
 	}, nil
 }
 
-// generateWithBits generates text while embedding bits through word choice
+// generateWithBits generates text while embedding bits through token selection from logprobs
 func (e *Encoder) generateWithBits(ctx context.Context, prompt string, bits []bool) (string, int, error) {
-	// For this implementation, we use a deterministic approach:
-	// 1. Generate multiple candidate responses
-	// 2. Hash each candidate and use bits to select which one to keep
-	// 3. Continue building the response piece by piece
+	// Optimized approach using logprobs:
+	// 1. Generate one token with logprobs enabled
+	// 2. Select token from top_logprobs based on bit value
+	// 3. Append to result and continue
 
 	var result strings.Builder
 	bitIndex := 0
 	tokenCount := 0
-
-	// We'll generate the text in chunks, using bits to influence word choice
 	currentPrompt := prompt
 
 	for bitIndex < len(bits) {
-		// Determine how many bits we can encode in this chunk
+		// Determine how many bits we can encode (limited by available candidates)
 		bitsToEncode := min(BitsPerDecision, len(bits)-bitIndex)
+
+		// Single LLM call with logprobs
+		resp, err := e.llmClient.Generate(ctx, currentPrompt, llm.GenerateOptions{
+			Temperature: 0.8,
+			TopK:        40,
+			NumPredict:  1, // Generate exactly 1 token
+		}, true) // logprobs=true
+		if err != nil {
+			return "", 0, fmt.Errorf("generation failed: %w", err)
+		}
+
+		// Parse logprobs
+		logprobItems, err := resp.ParseLogprobs()
+		if err != nil {
+			return "", 0, fmt.Errorf("failed to parse logprobs: %w", err)
+		}
+
+		if len(logprobItems) == 0 || len(logprobItems[0].TopLogprobs) == 0 {
+			// Fallback to default response if no logprobs
+			if resp.Response == "" {
+				break
+			}
+			result.WriteString(resp.Response)
+			currentPrompt = prompt + result.String()
+			tokenCount++
+			continue
+		}
+
+		// Get available candidates from top_logprobs
+		candidates := logprobItems[0].TopLogprobs
+		numCandidates := len(candidates)
+
+		// Adjust bits if not enough candidates
+		if numCandidates < (1 << bitsToEncode) {
+			// Reduce bits per decision if not enough candidates
+			for bitsToEncode > 0 && numCandidates < (1<<bitsToEncode) {
+				bitsToEncode--
+			}
+			if bitsToEncode == 0 {
+				// Use the top candidate, encode 0 bits
+				result.WriteString(candidates[0].Token)
+				currentPrompt = prompt + result.String()
+				tokenCount++
+				continue
+			}
+		}
+
+		// Calculate bit value and select token
 		bitValue := bitsToInt(bits[bitIndex : bitIndex+bitsToEncode])
-
-		// Generate candidates with different seeds
-		candidates := make([]string, NumCandidates)
-		for i := 0; i < NumCandidates; i++ {
-			resp, err := e.llmClient.Generate(ctx, currentPrompt, llm.GenerateOptions{
-				Temperature: 0.8,
-				TopK:        40,
-				NumPredict:  10, // Generate short chunks
-				Seed:        getSeed(currentPrompt, i),
-			}, false)
-			if err != nil {
-				return "", 0, fmt.Errorf("candidate %d generation failed: %w", i, err)
-			}
-			candidates[i] = resp.Response
+		selectedIndex := bitValue % (1 << bitsToEncode)
+		if selectedIndex >= numCandidates {
+			selectedIndex = 0
 		}
 
-		// Select candidate based on bit value
-		selectedCandidate := candidates[bitValue%len(candidates)]
-
-		// Extract first "word" or meaningful chunk from the selected candidate
-		chunk := extractChunk(selectedCandidate)
-		if chunk == "" {
-			// If we can't get a chunk, just use the first candidate
-			chunk = extractChunk(candidates[0])
-			if chunk == "" {
-				break // Can't generate more text
-			}
-		}
-
-		result.WriteString(chunk)
+		selectedToken := candidates[selectedIndex].Token
+		result.WriteString(selectedToken)
 		currentPrompt = prompt + result.String()
 		tokenCount++
 		bitIndex += bitsToEncode
 
 		// Safety limit
-		if tokenCount > 200 {
+		if tokenCount > 500 {
 			break
 		}
 	}
@@ -153,81 +174,114 @@ type DecodeResult struct {
 func (d *Decoder) Decode(ctx context.Context, coverText string, topic string) (*DecodeResult, error) {
 	prompt := buildPrompt(topic)
 
-	// Reconstruct bits by determining which candidate was chosen at each step
+	// Extract bits by matching tokens against logprobs at each position
 	var extractedBits []bool
 	currentPrompt := prompt
 	remainingText := coverText
+	tokenCount := 0
 
 	for len(remainingText) > 0 {
-		// Find the next chunk in the cover text
-		chunk := extractChunk(remainingText)
-		if chunk == "" {
+		// Generate logprobs for current position
+		resp, err := d.llmClient.Generate(ctx, currentPrompt, llm.GenerateOptions{
+			Temperature: 0.8,
+			TopK:        40,
+			NumPredict:  1,
+		}, true)
+		if err != nil {
+			return nil, fmt.Errorf("logprobs generation failed: %w", err)
+		}
+
+		logprobItems, err := resp.ParseLogprobs()
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse logprobs: %w", err)
+		}
+
+		if len(logprobItems) == 0 || len(logprobItems[0].TopLogprobs) == 0 {
+			// Cannot decode without logprobs
 			break
 		}
 
-		// Generate candidates with the same seeds as encoding
-		candidates := make([]string, NumCandidates)
-		for i := 0; i < NumCandidates; i++ {
-			resp, err := d.llmClient.Generate(ctx, currentPrompt, llm.GenerateOptions{
-				Temperature: 0.8,
-				TopK:        40,
-				NumPredict:  10,
-				Seed:        getSeed(currentPrompt, i),
-			}, false)
-			if err != nil {
-				return nil, fmt.Errorf("candidate %d generation failed: %w", i, err)
-			}
-			candidates[i] = resp.Response
+		candidates := logprobItems[0].TopLogprobs
+		numCandidates := len(candidates)
+
+		// Determine how many bits were encoded based on candidates
+		bitsToExtract := BitsPerDecision
+		for bitsToExtract > 0 && numCandidates < (1<<bitsToExtract) {
+			bitsToExtract--
 		}
 
-		// Find which candidate matches the actual chunk
+		// Find which candidate token matches the start of remainingText
 		matchIndex := -1
+		matchedToken := ""
 		for i, cand := range candidates {
-			candChunk := extractChunk(cand)
-			if candChunk == chunk {
-				matchIndex = i
+			if i >= (1 << bitsToExtract) {
+				break // Only check candidates within encoding range
+			}
+			if strings.HasPrefix(remainingText, cand.Token) {
+				// Prefer longest match for ambiguity resolution
+				if len(cand.Token) > len(matchedToken) {
+					matchIndex = i
+					matchedToken = cand.Token
+				}
+			}
+		}
+
+		if matchIndex < 0 {
+			// No match found - try to find any matching token to continue
+			for _, cand := range candidates {
+				if strings.HasPrefix(remainingText, cand.Token) {
+					matchedToken = cand.Token
+					break
+				}
+			}
+			if matchedToken == "" {
+				// Skip one character and try again
+				if len(remainingText) > 0 {
+					remainingText = remainingText[1:]
+					continue
+				}
 				break
 			}
-		}
-
-		if matchIndex >= 0 {
-			// Extract bits from the match index
-			bits := intToBits(matchIndex, BitsPerDecision)
+			// Found token but not in encoding range, skip without extracting bits
+		} else if bitsToExtract > 0 {
+			// Extract bits from match index
+			bits := intToBits(matchIndex, bitsToExtract)
 			extractedBits = append(extractedBits, bits...)
 		}
 
-		// Move forward in the text
-		remainingText = strings.TrimPrefix(remainingText, chunk)
-		remainingText = strings.TrimSpace(remainingText)
-		currentPrompt = prompt + strings.TrimSuffix(coverText, remainingText)
+		// Advance past matched token
+		if matchedToken != "" {
+			remainingText = strings.TrimPrefix(remainingText, matchedToken)
+			currentPrompt = currentPrompt + matchedToken
+		}
+		tokenCount++
 
-		// Safety limit
-		if len(extractedBits) > (MaxSecretLength+HeaderSize)*8+100 {
+		// Safety limits
+		if tokenCount > 500 || len(extractedBits) > (MaxSecretLength+2)*8+100 {
 			break
 		}
 	}
 
 	// Convert bits back to bytes
 	extractedBytes := bitsToBytes(extractedBits)
-	if len(extractedBytes) < HeaderSize {
+	if len(extractedBytes) < 2 {
 		return &DecodeResult{Valid: false}, nil
 	}
 
-	// Parse header
+	// Parse length prefix
 	payloadLen := int(binary.BigEndian.Uint16(extractedBytes[0:2]))
-	expectedChecksum := binary.BigEndian.Uint16(extractedBytes[2:4])
 
-	if payloadLen > len(extractedBytes)-HeaderSize {
+	if payloadLen > len(extractedBytes)-2 || payloadLen > MaxSecretLength {
 		return &DecodeResult{Valid: false}, nil
 	}
 
-	payload := extractedBytes[HeaderSize : HeaderSize+payloadLen]
-	actualChecksum := computeChecksum(payload)
+	payload := extractedBytes[2 : 2+payloadLen]
 
+	// Validity is determined by successful decryption (compact crypto has integrity check)
 	return &DecodeResult{
 		EncryptedPayload: payload,
 		BitsDecoded:      len(extractedBits),
-		Valid:            expectedChecksum == actualChecksum,
+		Valid:            true,
 	}, nil
 }
 
@@ -235,13 +289,19 @@ func (d *Decoder) Decode(ctx context.Context, coverText string, topic string) (*
 
 func buildPrompt(topic string) string {
 	if topic == "" {
-		topic = "casual conversation"
+		topic = "your day"
 	}
-	return fmt.Sprintf(`Continue this friendly conversation about %s. Write naturally and casually:
 
-Person A: Hey, what's up?
-Person B: Not much, just relaxing. 
-Person A: Nice! `, topic)
+	// Try to load prompt from file for easy tuning
+	promptFile := "internal/stego/prompt.txt"
+	if data, err := os.ReadFile(promptFile); err == nil {
+		return strings.ReplaceAll(string(data), "{{TOPIC}}", topic)
+	}
+
+	// Fallback to embedded prompt
+	return fmt.Sprintf(`Write a casual chat message about %s. Be natural and friendly, like texting a friend. Just write the message content, no labels or formatting:
+
+`, topic)
 }
 
 func extractChunk(text string) string {

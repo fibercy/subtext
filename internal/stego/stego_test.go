@@ -1,6 +1,7 @@
 package stego
 
 import (
+	"encoding/binary"
 	"testing"
 )
 
@@ -214,34 +215,26 @@ func TestBuildPrompt(t *testing.T) {
 	}
 }
 
-func TestHeaderEncoding(t *testing.T) {
-	// Simulate encoding a payload with header
+func TestLengthPrefixEncoding(t *testing.T) {
+	// Simulate encoding a payload with 2-byte length prefix
 	payload := []byte("secret message")
 
-	// Create header
-	header := make([]byte, HeaderSize)
-	header[0] = byte(len(payload) >> 8)
-	header[1] = byte(len(payload))
-	checksum := computeChecksum(payload)
-	header[2] = byte(checksum >> 8)
-	header[3] = byte(checksum)
+	// Create length prefix (2 bytes)
+	lengthPrefix := make([]byte, 2)
+	binary.BigEndian.PutUint16(lengthPrefix, uint16(len(payload)))
 
 	// Combine and verify
-	fullPayload := append(header, payload...)
+	fullPayload := append(lengthPrefix, payload...)
 
 	// Parse back
-	parsedLen := int(header[0])<<8 | int(header[1])
-	parsedChecksum := uint16(header[2])<<8 | uint16(header[3])
+	parsedLen := int(binary.BigEndian.Uint16(fullPayload[0:2]))
 
 	if parsedLen != len(payload) {
 		t.Errorf("Length mismatch: got %d, want %d", parsedLen, len(payload))
 	}
-	if parsedChecksum != checksum {
-		t.Errorf("Checksum mismatch: got %d, want %d", parsedChecksum, checksum)
-	}
 
 	// Extract payload
-	extracted := fullPayload[HeaderSize : HeaderSize+parsedLen]
+	extracted := fullPayload[2 : 2+parsedLen]
 	if string(extracted) != string(payload) {
 		t.Errorf("Payload mismatch: got %q, want %q", string(extracted), string(payload))
 	}
