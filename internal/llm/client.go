@@ -13,7 +13,7 @@ import (
 
 const (
 	DefaultBaseURL = "http://localhost:11434"
-	DefaultModel   = "llama3.1:8b"
+	DefaultModel   = "qwen3:8b"
 )
 
 // Client provides access to Ollama API
@@ -57,11 +57,13 @@ func NewClient(opts ...ClientOption) *Client {
 
 // GenerateRequest is the request body for /api/generate
 type GenerateRequest struct {
-	Model   string          `json:"model"`
-	Prompt  string          `json:"prompt"`
-	Stream  bool            `json:"stream"`
-	Options GenerateOptions `json:"options,omitempty"`
-	Raw     bool            `json:"raw,omitempty"`
+	Model       string          `json:"model"`
+	Prompt      string          `json:"prompt"`
+	Stream      bool            `json:"stream"`
+	Options     GenerateOptions `json:"options,omitempty"`
+	Raw         bool            `json:"raw,omitempty"`
+	Logprobs    bool            `json:"logprobs,omitempty"`
+	TopLogprobs int             `json:"top_logprobs,omitempty"`
 }
 
 // GenerateOptions controls generation parameters
@@ -74,13 +76,41 @@ type GenerateOptions struct {
 	Seed        int      `json:"seed,omitempty"`
 }
 
+// LogprobToken represents a single token with its log probability in top_logprobs
+type LogprobToken struct {
+	Token   string  `json:"token"`
+	Logprob float64 `json:"logprob"`
+	Bytes   []byte  `json:"bytes,omitempty"`
+}
+
+// LogprobItem represents a single token analysis from the logprobs array
+type LogprobItem struct {
+	Token       string         `json:"token"`
+	Logprob     float64        `json:"logprob"`
+	Bytes       []byte         `json:"bytes,omitempty"`
+	TopLogprobs []LogprobToken `json:"top_logprobs,omitempty"`
+}
+
 // GenerateResponse is the response from /api/generate
 type GenerateResponse struct {
-	Model     string `json:"model"`
-	Response  string `json:"response"`
-	Done      bool   `json:"done"`
-	Context   []int  `json:"context,omitempty"`
-	CreatedAt string `json:"created_at"`
+	Model     string          `json:"model"`
+	Response  string          `json:"response"`
+	Done      bool            `json:"done"`
+	Context   []int           `json:"context,omitempty"`
+	CreatedAt string          `json:"created_at"`
+	Logprobs  json.RawMessage `json:"logprobs,omitempty"`
+}
+
+// ParseLogprobs parses the raw logprobs JSON into structured LogprobItems
+func (r *GenerateResponse) ParseLogprobs() ([]LogprobItem, error) {
+	if len(r.Logprobs) == 0 {
+		return nil, nil
+	}
+	var items []LogprobItem
+	if err := json.Unmarshal(r.Logprobs, &items); err != nil {
+		return nil, fmt.Errorf("failed to parse logprobs: %w", err)
+	}
+	return items, nil
 }
 
 // TokenizeRequest is the request body for tokenization
@@ -95,12 +125,16 @@ type TokenizeResponse struct {
 }
 
 // Generate performs text generation
-func (c *Client) Generate(ctx context.Context, prompt string, opts GenerateOptions) (*GenerateResponse, error) {
+func (c *Client) Generate(ctx context.Context, prompt string, opts GenerateOptions, logprobs bool) (*GenerateResponse, error) {
+	fmt.Printf("[LLM Req] Prompt: %s\n", prompt)
 	req := GenerateRequest{
-		Model:   c.model,
-		Prompt:  prompt,
-		Stream:  false,
-		Options: opts,
+		Model:       c.model,
+		Prompt:      prompt,
+		Stream:      false,
+		Raw:         true,
+		Options:     opts,
+		Logprobs:    logprobs,
+		TopLogprobs: 20,
 	}
 
 	body, err := json.Marshal(req)
@@ -130,12 +164,14 @@ func (c *Client) Generate(ctx context.Context, prompt string, opts GenerateOptio
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
+	fmt.Printf("[LLM Resp] Response: %s\n", result.Response)
 	return &result, nil
 }
 
 // GenerateWithLogprobs generates text and returns token logprobs for constrained decoding
 // This uses streaming to get token-by-token output
 func (c *Client) GenerateWithLogprobs(ctx context.Context, prompt string, opts GenerateOptions) ([]TokenLogprob, error) {
+	fmt.Printf("[LLM Req] Prompt (Stream): %s\n", prompt)
 	req := GenerateRequest{
 		Model:   c.model,
 		Prompt:  prompt,

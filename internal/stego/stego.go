@@ -98,7 +98,7 @@ func (e *Encoder) generateWithBits(ctx context.Context, prompt string, bits []bo
 				TopK:        40,
 				NumPredict:  10, // Generate short chunks
 				Seed:        getSeed(currentPrompt, i),
-			})
+			}, false)
 			if err != nil {
 				return "", 0, fmt.Errorf("candidate %d generation failed: %w", i, err)
 			}
@@ -173,7 +173,7 @@ func (d *Decoder) Decode(ctx context.Context, coverText string, topic string) (*
 				TopK:        40,
 				NumPredict:  10,
 				Seed:        getSeed(currentPrompt, i),
-			})
+			}, false)
 			if err != nil {
 				return nil, fmt.Errorf("candidate %d generation failed: %w", i, err)
 			}
