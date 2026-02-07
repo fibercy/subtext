@@ -18,9 +18,17 @@ const (
 	BitsPerDecision = 4
 	// NumCandidates is 2^BitsPerDecision
 	NumCandidates = 1 << BitsPerDecision
-	// MaxSecretLength is the maximum secret message length in bytes
-	MaxSecretLength = 64
+	// MaxSecretLength is the maximum encrypted payload length per segment in bytes
+	MaxSecretLength = 256
+	// TargetSegmentPayloadLength is the target encrypted payload size per generated cover segment.
+	// Smaller segments reduce long-run model drift into meta/instructional text.
+	TargetSegmentPayloadLength = 16
+	// MaxSegmentEncodeAttempts is the max retries to regenerate a valid segment.
+	MaxSegmentEncodeAttempts = 8
 )
+
+// segmentSeparator is an explicit boundary between independently decodable cover segments.
+const segmentSeparator = "\n\n---SEG---\n\n"
 
 // Encoder handles steganographic encoding of messages into cover text
 type Encoder struct {
@@ -41,36 +49,99 @@ type EncodeResult struct {
 
 // Encode encodes an encrypted payload into cover text
 func (e *Encoder) Encode(ctx context.Context, encryptedPayload []byte, topic string) (*EncodeResult, error) {
-	if len(encryptedPayload) > MaxSecretLength {
-		return nil, fmt.Errorf("payload too large: %d bytes (max %d)", len(encryptedPayload), MaxSecretLength)
+	if len(encryptedPayload) == 0 {
+		return nil, fmt.Errorf("payload is empty")
 	}
 
-	// Encode the encrypted payload directly (compact crypto has built-in integrity)
-	// Add length prefix for decoding (2 bytes)
+	basePrompt := buildPrompt(topic)
+	segmentSize := min(TargetSegmentPayloadLength, MaxSecretLength)
+	segments := make([]string, 0, (len(encryptedPayload)+segmentSize-1)/segmentSize)
+	totalBits := 0
+	totalTokens := 0
+
+	for i := 0; i < len(encryptedPayload); i += segmentSize {
+		end := min(i+segmentSize, len(encryptedPayload))
+		chunk := encryptedPayload[i:end]
+
+		segmentPrompt := buildSegmentPrompt(basePrompt, segments)
+		coverSegment, bitsEncoded, tokenCount, err := e.encodeSegment(ctx, segmentPrompt, chunk)
+		if err != nil {
+			return nil, fmt.Errorf("segment %d encoding failed: %w", len(segments)+1, err)
+		}
+
+		segments = append(segments, coverSegment)
+		totalBits += bitsEncoded
+		totalTokens += tokenCount
+	}
+
+	return &EncodeResult{
+		CoverText:   strings.Join(segments, segmentSeparator),
+		BitsEncoded: totalBits,
+		TokenCount:  totalTokens,
+	}, nil
+}
+
+// EncodeInteractiveSegment encodes one encrypted chunk into one cover segment.
+// peerReply is plain text from the peer and is only used as style/context guidance.
+func (e *Encoder) EncodeInteractiveSegment(ctx context.Context, encryptedPayload []byte, topic, peerReply string) (*EncodeResult, error) {
+	if len(encryptedPayload) == 0 {
+		return nil, fmt.Errorf("payload is empty")
+	}
+
+	basePrompt := buildPrompt(topic)
+	prompt := buildSegmentPromptWithPeerReply(basePrompt, peerReply)
+
+	coverSegment, bitsEncoded, tokenCount, err := e.encodeSegment(ctx, prompt, encryptedPayload)
+	if err != nil {
+		return nil, err
+	}
+
+	return &EncodeResult{
+		CoverText:   coverSegment,
+		BitsEncoded: bitsEncoded,
+		TokenCount:  tokenCount,
+	}, nil
+}
+
+func (e *Encoder) encodeSegment(ctx context.Context, prompt string, encryptedPayload []byte) (string, int, int, error) {
+	if len(encryptedPayload) > MaxSecretLength {
+		return "", 0, 0, fmt.Errorf("payload too large: %d bytes (max %d)", len(encryptedPayload), MaxSecretLength)
+	}
+
+	// Add a 2-byte length prefix so each segment can be decoded independently.
 	payloadWithLen := make([]byte, 2+len(encryptedPayload))
 	binary.BigEndian.PutUint16(payloadWithLen[0:2], uint16(len(encryptedPayload)))
 	copy(payloadWithLen[2:], encryptedPayload)
 
 	bits := bytesToBits(payloadWithLen)
-
-	// Build the prompt for cover text generation
-	prompt := buildPrompt(topic)
-
-	// Generate cover text with embedded bits
-	coverText, tokenCount, err := e.generateWithBits(ctx, prompt, bits)
-	if err != nil {
-		return nil, fmt.Errorf("generation failed: %w", err)
+	for attempt := 1; attempt <= MaxSegmentEncodeAttempts; attempt++ {
+		coverText, tokenCount, bitsEncoded, err := e.generateWithBits(ctx, prompt, bits)
+		if err != nil {
+			if attempt == MaxSegmentEncodeAttempts {
+				return "", 0, 0, fmt.Errorf("generation failed: %w", err)
+			}
+			continue
+		}
+		if bitsEncoded != len(bits) {
+			if attempt == MaxSegmentEncodeAttempts {
+				return "", 0, 0, fmt.Errorf("incomplete segment encoding: encoded %d of %d bits", bitsEncoded, len(bits))
+			}
+			continue
+		}
+		if !isValidCoverSegment(coverText) {
+			if attempt == MaxSegmentEncodeAttempts {
+				return "", 0, 0, fmt.Errorf("generated segment failed quality checks")
+			}
+			continue
+		}
+		return coverText, len(bits), tokenCount, nil
 	}
 
-	return &EncodeResult{
-		CoverText:   coverText,
-		BitsEncoded: len(bits),
-		TokenCount:  tokenCount,
-	}, nil
+	return "", 0, 0, fmt.Errorf("segment encoding failed after %d attempts", MaxSegmentEncodeAttempts)
 }
 
 // generateWithBits generates text while embedding bits through token selection from logprobs
-func (e *Encoder) generateWithBits(ctx context.Context, prompt string, bits []bool) (string, int, error) {
+func (e *Encoder) generateWithBits(ctx context.Context, prompt string, bits []bool) (string, int, int, error) {
 	// Optimized approach using logprobs:
 	// 1. Generate one token with logprobs enabled
 	// 2. Select token from top_logprobs based on bit value
@@ -92,13 +163,13 @@ func (e *Encoder) generateWithBits(ctx context.Context, prompt string, bits []bo
 			NumPredict:  1, // Generate exactly 1 token
 		}, true) // logprobs=true
 		if err != nil {
-			return "", 0, fmt.Errorf("generation failed: %w", err)
+			return "", 0, 0, fmt.Errorf("generation failed: %w", err)
 		}
 
 		// Parse logprobs
 		logprobItems, err := resp.ParseLogprobs()
 		if err != nil {
-			return "", 0, fmt.Errorf("failed to parse logprobs: %w", err)
+			return "", 0, 0, fmt.Errorf("failed to parse logprobs: %w", err)
 		}
 
 		if len(logprobItems) == 0 || len(logprobItems[0].TopLogprobs) == 0 {
@@ -113,7 +184,7 @@ func (e *Encoder) generateWithBits(ctx context.Context, prompt string, bits []bo
 		}
 
 		// Get available candidates from top_logprobs
-		candidates := logprobItems[0].TopLogprobs
+		candidates := filterCoverCandidates(logprobItems[0].TopLogprobs)
 		numCandidates := len(candidates)
 
 		// Adjust bits if not enough candidates
@@ -150,7 +221,7 @@ func (e *Encoder) generateWithBits(ctx context.Context, prompt string, bits []bo
 		}
 	}
 
-	return strings.TrimSpace(result.String()), tokenCount, nil
+	return strings.TrimSpace(result.String()), tokenCount, bitIndex, nil
 }
 
 // Decoder handles steganographic decoding of messages from cover text
@@ -172,8 +243,46 @@ type DecodeResult struct {
 
 // Decode extracts the encrypted payload from cover text
 func (d *Decoder) Decode(ctx context.Context, coverText string, topic string) (*DecodeResult, error) {
-	prompt := buildPrompt(topic)
+	return d.DecodeWithPeerReplies(ctx, coverText, topic, nil)
+}
 
+// DecodeWithPeerReplies decodes cover segments with optional per-segment peer replies.
+// peerReplies maps to segments 2..N (i.e. peerReplies[0] is for segment 2).
+func (d *Decoder) DecodeWithPeerReplies(ctx context.Context, coverText string, topic string, peerReplies []string) (*DecodeResult, error) {
+	segments := splitCoverSegments(coverText)
+	if len(segments) == 0 {
+		return &DecodeResult{Valid: false}, nil
+	}
+
+	basePrompt := buildPrompt(topic)
+	var payload []byte
+	totalBits := 0
+
+	for i, segment := range segments {
+		segmentPrompt := buildSegmentPrompt(basePrompt, segments[:i])
+		if i > 0 && i-1 < len(peerReplies) && strings.TrimSpace(peerReplies[i-1]) != "" {
+			segmentPrompt = buildSegmentPromptWithPeerReply(basePrompt, peerReplies[i-1])
+		}
+		decoded, err := d.decodeSegment(ctx, segment, segmentPrompt)
+		if err != nil {
+			return nil, fmt.Errorf("segment %d decode failed: %w", i+1, err)
+		}
+		if !decoded.Valid {
+			return &DecodeResult{Valid: false}, nil
+		}
+
+		payload = append(payload, decoded.EncryptedPayload...)
+		totalBits += decoded.BitsDecoded
+	}
+
+	return &DecodeResult{
+		EncryptedPayload: payload,
+		BitsDecoded:      totalBits,
+		Valid:            true,
+	}, nil
+}
+
+func (d *Decoder) decodeSegment(ctx context.Context, coverText string, prompt string) (*DecodeResult, error) {
 	// Extract bits by matching tokens against logprobs at each position
 	var extractedBits []bool
 	currentPrompt := prompt
@@ -201,7 +310,7 @@ func (d *Decoder) Decode(ctx context.Context, coverText string, topic string) (*
 			break
 		}
 
-		candidates := logprobItems[0].TopLogprobs
+		candidates := filterCoverCandidates(logprobItems[0].TopLogprobs)
 		numCandidates := len(candidates)
 
 		// Determine how many bits were encoded based on candidates
@@ -299,9 +408,166 @@ func buildPrompt(topic string) string {
 	}
 
 	// Fallback to embedded prompt
-	return fmt.Sprintf(`Write a casual chat message about %s. Be natural and friendly, like texting a friend. Just write the message content, no labels or formatting:
+	return fmt.Sprintf(`Write one natural everyday text message about %s.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+	`, topic)
+}
 
-`, topic)
+func buildSegmentPrompt(basePrompt string, previousSegments []string) string {
+	if len(previousSegments) == 0 {
+		return basePrompt
+	}
+
+	previous := strings.TrimSpace(previousSegments[len(previousSegments)-1])
+	const maxPreviousChars = 220
+	if len(previous) > maxPreviousChars {
+		previous = previous[len(previous)-maxPreviousChars:]
+	}
+
+	return fmt.Sprintf(`%s
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+%s
+Next message:
+`, basePrompt, previous)
+}
+
+func buildSegmentPromptWithPeerReply(basePrompt, peerReply string) string {
+	peerReply = strings.TrimSpace(peerReply)
+	if peerReply == "" {
+		return basePrompt
+	}
+	const maxReplyChars = 220
+	if len(peerReply) > maxReplyChars {
+		peerReply = peerReply[len(peerReply)-maxReplyChars:]
+	}
+
+	return fmt.Sprintf(`%s
+Continue the same chat thread from the same person.
+Adapt naturally to the peer's latest reply while staying mundane.
+Peer reply:
+%s
+Next message:
+`, basePrompt, peerReply)
+}
+
+func filterCoverCandidates(candidates []llm.LogprobToken) []llm.LogprobToken {
+	filtered := make([]llm.LogprobToken, 0, len(candidates))
+	for _, cand := range candidates {
+		if isAllowedCoverToken(cand.Token) {
+			filtered = append(filtered, cand)
+		}
+	}
+	if len(filtered) == 0 {
+		return candidates
+	}
+	return filtered
+}
+
+func isAllowedCoverToken(token string) bool {
+	if token == "" {
+		return false
+	}
+	if strings.ContainsAny(token, "\n\r\t[]{}<>") {
+		return false
+	}
+
+	trimmed := strings.ToLower(strings.TrimSpace(token))
+	badToken := map[string]struct{}{
+		"note":         {},
+		"instruction":  {},
+		"instructions": {},
+		"prompt":       {},
+		"rules":        {},
+	}
+	if _, found := badToken[trimmed]; found {
+		return false
+	}
+	if strings.HasPrefix(trimmed, "write") {
+		return false
+	}
+
+	return true
+}
+
+func splitCoverSegments(coverText string) []string {
+	coverText = strings.TrimSpace(coverText)
+	if coverText == "" {
+		return nil
+	}
+
+	parts := strings.Split(coverText, segmentSeparator)
+	segments := make([]string, 0, len(parts))
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part != "" {
+			segments = append(segments, part)
+		}
+	}
+	return segments
+}
+
+// JoinCoverSegments joins independently encoded cover segments into one decode-able payload.
+func JoinCoverSegments(segments []string) string {
+	clean := make([]string, 0, len(segments))
+	for _, segment := range segments {
+		segment = strings.TrimSpace(segment)
+		if segment != "" {
+			clean = append(clean, segment)
+		}
+	}
+	return strings.Join(clean, segmentSeparator)
+}
+
+func isValidCoverSegment(text string) bool {
+	text = strings.TrimSpace(text)
+	if text == "" {
+		return false
+	}
+	if strings.Contains(text, segmentSeparator) {
+		return false
+	}
+	if strings.Contains(text, "\n") || strings.Contains(text, "\r") {
+		return false
+	}
+	if strings.ContainsAny(text, "[]{}<>") {
+		return false
+	}
+
+	words := strings.Fields(text)
+	if len(words) < 8 || len(words) > 90 {
+		return false
+	}
+
+	lower := strings.ToLower(text)
+	badPhrases := []string{
+		"write one sentence",
+		"write a sentence",
+		"hard rules",
+		"output only",
+		"this text",
+		"no changes in punctuation",
+		"optional argumentation",
+		"include names",
+		"instruction",
+		"prompt",
+	}
+	for _, phrase := range badPhrases {
+		if strings.Contains(lower, phrase) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func extractChunk(text string) string {

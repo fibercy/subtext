@@ -51,15 +51,14 @@ echo "Bob Key:   ${KEY_B:0:16}..."
 $STEGO_BIN session complete-key-exchange $ID_A $KEY_B > /dev/null
 echo "Alice linked with Bob's key"
 
-# 5. Send Secret Message (with Decoy)
-echo -e "\n${GREEN}[5] Encoding Secret Message with Decoy...${NC}"
+# 5. Send Secret Message (baseline mode: no decoy)
+echo -e "\n${GREEN}[5] Encoding Secret Message (No Decoy)...${NC}"
 echo "Secret: 'Meet at dock 7 at midnight'"
-echo "Decoy:  'Heading to the gym now'"
 echo "Topic:  'fitness'"
 
 # Simulating no LLM by default (unless user has Ollama running), so we expect placeholder
 # But we'll capture the output anyway
-COVER_TEXT=$($STEGO_BIN encode $ID_A "Meet at dock 7 at midnight" --decoy "Heading to the gym now" --topic "fitness" --raw)
+COVER_TEXT=$($STEGO_BIN encode $ID_A "Meet at dock 7 at midnight" --topic "fitness" --raw)
 
 echo -e "\n${BLUE}Generated Cover Text:${NC}"
 echo "$COVER_TEXT"
@@ -74,11 +73,9 @@ $STEGO_BIN analyze "$CLEAN_COVER"
 echo -e "\n${GREEN}[7] Decrypting with Real Key...${NC}"
 $STEGO_BIN decode $ID_A "$CLEAN_COVER"
 
-# 8. Decode (Decoy)
-echo -e "\n${GREEN}[8] Decrypting with Decoy Key...${NC}"
-# We need to get the decoy key. Since we are automating, we can't easily grab it from step 5 output without complex parsing
-# But in a real scenario, the user would have stored it.
-# For this demo, let's just show that we can decode with the real key, which we did.
+# 8. Baseline note
+echo -e "\n${GREEN}[8] Baseline Mode...${NC}"
+echo "Decoy flow is disabled in this demo run."
 
 echo -e "\n${BLUE}=== Demo Complete ===${NC}"
 

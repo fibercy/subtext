@@ -61,7 +61,7 @@ func init() {
 
 // Helper function to get context with timeout
 func getContext() (context.Context, context.CancelFunc) {
-	return context.WithTimeout(context.Background(), 30*time.Second)
+	return context.WithTimeout(context.Background(), 300*time.Second)
 }
 
 // Helper to print errors consistently
