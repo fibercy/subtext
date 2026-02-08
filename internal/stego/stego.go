@@ -16,16 +16,19 @@ import (
 
 const (
 	// BitsPerDecision is the number of bits encoded per token decision.
-	BitsPerDecision = 3
+	// Reduced from 3 to 2 for better reliability with ASCII-only token filtering.
+	BitsPerDecision = 2
 	// NumCandidates is 2^BitsPerDecision
 	NumCandidates = 1 << BitsPerDecision
 	// MaxSecretLength is the maximum encrypted payload length per segment in bytes
 	MaxSecretLength = 256
 	// TargetSegmentPayloadLength is the target encrypted payload size per generated cover segment.
 	// Smaller segments reduce long-run model drift into meta/instructional text.
-	TargetSegmentPayloadLength = 16
+	// Reduced to 8 bytes for better reliability with ASCII-only token filtering.
+	TargetSegmentPayloadLength = 8
 	// MaxSegmentEncodeAttempts is the max retries to regenerate a valid segment.
-	MaxSegmentEncodeAttempts = 8
+	// Increased for multilingual models that may produce non-ASCII tokens.
+	MaxSegmentEncodeAttempts = 12
 )
 
 // segmentSeparator is an explicit boundary between independently decodable cover segments.
@@ -116,7 +119,7 @@ func (e *Encoder) encodeSegment(ctx context.Context, prompt string, encryptedPay
 
 	bits := bytesToBits(payloadWithLen)
 	for attempt := 1; attempt <= MaxSegmentEncodeAttempts; attempt++ {
-		coverText, tokenCount, bitsEncoded, err := e.generateWithBits(ctx, prompt, bits)
+		coverText, tokenCount, bitsEncoded, err := e.generateWithBits(ctx, prompt, bits, attempt)
 		if err != nil {
 			if attempt == MaxSegmentEncodeAttempts {
 				return "", 0, 0, fmt.Errorf("generation failed: %w", err)
@@ -141,21 +144,35 @@ func (e *Encoder) encodeSegment(ctx context.Context, prompt string, encryptedPay
 	return "", 0, 0, fmt.Errorf("segment encoding failed after %d attempts", MaxSegmentEncodeAttempts)
 }
 
+// formatPrompt wraps instruction + generated assistant text using the model's
+// chat template (if available). When no template is set, it falls back to raw
+// concatenation which works for models like llama3.1.
+func (e *Encoder) formatPrompt(instruction, assistantText string) string {
+	tmpl := e.llmClient.GetChatTemplate()
+	if tmpl != nil {
+		return tmpl.FormatPrompt(instruction, assistantText)
+	}
+	return instruction + assistantText
+}
+
 // generateWithBits generates text while embedding bits through token selection from logprobs
-func (e *Encoder) generateWithBits(ctx context.Context, prompt string, bits []bool) (string, int, int, error) {
+func (e *Encoder) generateWithBits(ctx context.Context, instruction string, bits []bool, attempt int) (string, int, int, error) {
 	var result strings.Builder
 	bitIndex := 0
 	tokenCount := 0
-	currentPrompt := prompt
+	emptyResponseCount := 0 // Track consecutive empty responses
 
 	for bitIndex < len(bits) {
 		bitsToEncode := min(BitsPerDecision, len(bits)-bitIndex)
+		currentPrompt := e.formatPrompt(instruction, result.String())
 
+		// Include attempt number in seed for variation across retries
+		seed := promptToSeed(currentPrompt) + attempt*1000 + tokenCount
 		resp, err := e.llmClient.Generate(ctx, currentPrompt, llm.GenerateOptions{
-			Temperature: 0.8,
-			TopK:        40,
+			Temperature: 0.9, // Increased temperature for more diversity
+			TopK:        50,  // Increased TopK for more token candidates
 			NumPredict:  1,
-			Seed:        promptToSeed(currentPrompt),
+			Seed:        seed,
 		}, true)
 		if err != nil {
 			return "", 0, 0, fmt.Errorf("generation failed: %w", err)
@@ -168,13 +185,19 @@ func (e *Encoder) generateWithBits(ctx context.Context, prompt string, bits []bo
 
 		if len(logprobItems) == 0 || len(logprobItems[0].TopLogprobs) == 0 {
 			if resp.Response == "" {
-				break
+				emptyResponseCount++
+				// Allow a few empty responses before giving up
+				if emptyResponseCount > 3 {
+					break
+				}
+				continue
 			}
+			emptyResponseCount = 0
 			result.WriteString(resp.Response)
-			currentPrompt = prompt + result.String()
 			tokenCount++
 			continue
 		}
+		emptyResponseCount = 0
 
 		candidates := filterCoverCandidates(logprobItems[0].TopLogprobs)
 		numCandidates := len(candidates)
@@ -185,7 +208,6 @@ func (e *Encoder) generateWithBits(ctx context.Context, prompt string, bits []bo
 			}
 			if bitsToEncode == 0 {
 				result.WriteString(candidates[0].Token)
-				currentPrompt = prompt + result.String()
 				tokenCount++
 				continue
 			}
@@ -199,7 +221,6 @@ func (e *Encoder) generateWithBits(ctx context.Context, prompt string, bits []bo
 
 		selectedToken := candidates[selectedIndex].Token
 		result.WriteString(selectedToken)
-		currentPrompt = prompt + result.String()
 		tokenCount++
 		bitIndex += bitsToEncode
 
@@ -218,9 +239,9 @@ func (e *Encoder) GenerateReply(ctx context.Context, receivedMessage, topic stri
 	if topic == "" {
 		topic = "casual chat"
 	}
-	prompt := fmt.Sprintf(`Your friend texted you about %s: "%s"
-Reply in 1 short sentence. Casual, lowercase, no quotes, no explanations.
-Reply:`, topic, receivedMessage)
+	instruction := fmt.Sprintf(`Your friend texted you about %s: "%s"
+Reply in 1 short sentence. Casual, lowercase, no quotes, no explanations.`, topic, receivedMessage)
+	prompt := e.formatPrompt(instruction, "")
 
 	resp, err := e.llmClient.Generate(ctx, prompt, llm.GenerateOptions{
 		Temperature: 0.9,
@@ -302,10 +323,20 @@ func (d *Decoder) DecodeWithPeerReplies(ctx context.Context, coverText string, t
 	}, nil
 }
 
-func (d *Decoder) decodeSegment(ctx context.Context, coverText string, prompt string) (*DecodeResult, error) {
+// formatPromptDecode wraps instruction + generated assistant text using the model's
+// chat template (if available) for decoding.
+func (d *Decoder) formatPrompt(instruction, assistantText string) string {
+	tmpl := d.llmClient.GetChatTemplate()
+	if tmpl != nil {
+		return tmpl.FormatPrompt(instruction, assistantText)
+	}
+	return instruction + assistantText
+}
+
+func (d *Decoder) decodeSegment(ctx context.Context, coverText string, instruction string) (*DecodeResult, error) {
 	// Extract bits by matching tokens against logprobs at each position
 	var extractedBits []bool
-	currentPrompt := prompt
+	var assistantText strings.Builder // accumulated matched tokens
 	remainingText := coverText
 	tokenCount := 0
 	// allowTrimmed is true only for the first token, where TrimSpace during
@@ -313,6 +344,8 @@ func (d *Decoder) decodeSegment(ctx context.Context, coverText string, prompt st
 	allowTrimmed := true
 
 	for len(remainingText) > 0 {
+		currentPrompt := d.formatPrompt(instruction, assistantText.String())
+
 		// Generate logprobs for current position
 		resp, err := d.llmClient.Generate(ctx, currentPrompt, llm.GenerateOptions{
 			Temperature: 0.8,
@@ -399,7 +432,7 @@ func (d *Decoder) decodeSegment(ctx context.Context, coverText string, prompt st
 		// Advance past matched token
 		if actualConsumed != "" {
 			remainingText = strings.TrimPrefix(remainingText, actualConsumed)
-			currentPrompt = currentPrompt + matchedToken // Use original token for prompt
+			assistantText.WriteString(matchedToken) // Use original token for prompt
 		}
 		tokenCount++
 
@@ -545,6 +578,10 @@ func isAllowedCoverToken(token string) bool {
 	if containsInvisible(token) {
 		return false
 	}
+	// Reject non-ASCII tokens (Chinese, emojis, etc.) to ensure English-only output
+	if !isASCIIOnly(token) {
+		return false
+	}
 
 	trimmed := strings.ToLower(strings.TrimSpace(token))
 	badToken := map[string]struct{}{
@@ -599,6 +636,17 @@ func isInvisibleRune(r rune) bool {
 	return false
 }
 
+// isASCIIOnly returns true if the string contains only ASCII characters.
+// Used to filter out Chinese, emojis, and other non-ASCII tokens from multilingual models.
+func isASCIIOnly(s string) bool {
+	for _, r := range s {
+		if r > 127 {
+			return false
+		}
+	}
+	return true
+}
+
 func splitCoverSegments(coverText string) []string {
 	coverText = strings.TrimSpace(coverText)
 	if coverText == "" {
@@ -645,9 +693,14 @@ func isValidCoverSegment(text string) bool {
 	if containsInvisible(text) {
 		return false
 	}
+	// Reject non-ASCII text (Chinese, emojis, etc.) to ensure English-only cover
+	if !isASCIIOnly(text) {
+		return false
+	}
 
 	words := strings.Fields(text)
-	if len(words) < 8 || len(words) > 90 {
+	// Minimum reduced to 5 for smaller segment payloads
+	if len(words) < 5 || len(words) > 90 {
 		return false
 	}
 

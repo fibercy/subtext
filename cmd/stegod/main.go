@@ -25,7 +25,7 @@ var (
 	port      = flag.Int("port", 50051, "The server port")
 	dataDir   = flag.String("data-dir", "", "Data directory (default: ~/.stegochat)")
 	ollamaURL = flag.String("ollama-url", "http://localhost:11434", "Ollama API URL")
-	model     = flag.String("model", "llama3.1:8b", "LLM model to use")
+	model     = flag.String("model", "qwen2.5:14b", "LLM model to use")
 )
 
 func main() {
@@ -73,6 +73,11 @@ func main() {
 		log.Printf("To enable, start Ollama with: ollama run %s", *model)
 	} else {
 		log.Printf("Connected to Ollama at %s (model: %s)", *ollamaURL, *model)
+		if tmpl, err := llmClient.FetchChatTemplate(ctx); err != nil {
+			log.Printf("WARNING: could not fetch chat template: %v", err)
+		} else if tmpl != nil {
+			log.Printf("Using chat template (system: %q)", tmpl.SystemMessage[:min(40, len(tmpl.SystemMessage))])
+		}
 		serverOpts = append(serverOpts, server.WithLLMClient(llmClient))
 	}
 

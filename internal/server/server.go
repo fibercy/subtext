@@ -28,7 +28,8 @@ type StegoServer struct {
 }
 
 const MaxPlaintextLengthNoDecoy = 512
-const InteractiveChunkSize = 16
+
+// InteractiveChunkSize is set to match stego.TargetSegmentPayloadLength
 
 type interactiveEncodeFlow struct {
 	SessionID string
@@ -274,7 +275,7 @@ func (s *StegoServer) EncodeMessage(ctx context.Context, req *pb.EncodeMessageRe
 		// Fallback: return placeholder with bit count
 		bitsToEncode := len(payload) * 8
 		return &pb.EncodeMessageResponse{
-			CoverText:   "[LLM not configured - start Ollama with llama3.1:8b]",
+			CoverText:   "[LLM not configured - start Ollama with qwen2.5:14b]",
 			BitsEncoded: int32(bitsToEncode),
 			MessageId:   uuid.New().String(),
 		}, nil
@@ -328,7 +329,7 @@ func (s *StegoServer) StartInteractiveEncode(ctx context.Context, req *pb.StartI
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "encryption failed: %v", err)
 	}
-	chunks := chunkBytes(ciphertext, InteractiveChunkSize)
+	chunks := chunkBytes(ciphertext, stego.TargetSegmentPayloadLength)
 	if len(chunks) == 0 {
 		return nil, status.Error(codes.Internal, "failed to split encrypted payload")
 	}
@@ -469,7 +470,7 @@ func (s *StegoServer) DecodeMessage(ctx context.Context, req *pb.DecodeMessageRe
 	// Check if LLM decoder is available
 	if s.decoder == nil {
 		return &pb.DecodeMessageResponse{
-			SecretMessage: "[LLM not configured - start Ollama with llama3.1:8b]",
+			SecretMessage: "[LLM not configured - start Ollama with qwen2.5:14b]",
 			IsDecoy:       isDecoy,
 			MessageId:     uuid.New().String(),
 		}, nil
