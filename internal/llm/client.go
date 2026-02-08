@@ -126,7 +126,6 @@ type TokenizeResponse struct {
 
 // Generate performs text generation
 func (c *Client) Generate(ctx context.Context, prompt string, opts GenerateOptions, logprobs bool) (*GenerateResponse, error) {
-	fmt.Printf("[LLM Req] Prompt: %s\n", prompt)
 	req := GenerateRequest{
 		Model:       c.model,
 		Prompt:      prompt,
@@ -164,74 +163,7 @@ func (c *Client) Generate(ctx context.Context, prompt string, opts GenerateOptio
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
-	fmt.Printf("[LLM Resp] Response: %s\n", result.Response)
 	return &result, nil
-}
-
-// GenerateWithLogprobs generates text and returns token logprobs for constrained decoding
-// This uses streaming to get token-by-token output
-func (c *Client) GenerateWithLogprobs(ctx context.Context, prompt string, opts GenerateOptions) ([]TokenLogprob, error) {
-	fmt.Printf("[LLM Req] Prompt (Stream): %s\n", prompt)
-	req := GenerateRequest{
-		Model:   c.model,
-		Prompt:  prompt,
-		Stream:  true,
-		Options: opts,
-	}
-
-	body, err := json.Marshal(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal request: %w", err)
-	}
-
-	httpReq, err := http.NewRequestWithContext(ctx, "POST", c.baseURL+"/api/generate", bytes.NewReader(body))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
-	httpReq.Header.Set("Content-Type", "application/json")
-
-	resp, err := c.httpClient.Do(httpReq)
-	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("ollama returned status %d: %s", resp.StatusCode, string(body))
-	}
-
-	var tokens []TokenLogprob
-	decoder := json.NewDecoder(resp.Body)
-	for {
-		var chunk struct {
-			Response string `json:"response"`
-			Done     bool   `json:"done"`
-		}
-		if err := decoder.Decode(&chunk); err == io.EOF {
-			break
-		} else if err != nil {
-			return nil, fmt.Errorf("failed to decode stream: %w", err)
-		}
-
-		if chunk.Response != "" {
-			tokens = append(tokens, TokenLogprob{
-				Token: chunk.Response,
-			})
-		}
-
-		if chunk.Done {
-			break
-		}
-	}
-
-	return tokens, nil
-}
-
-// TokenLogprob represents a token with its log probability
-type TokenLogprob struct {
-	Token   string
-	Logprob float64
 }
 
 // Tokenize converts text to token IDs
