@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	// BitsPerDecision is the number of bits encoded per token decision
-	BitsPerDecision = 4
+	// BitsPerDecision is the number of bits encoded per token decision.
+	BitsPerDecision = 3
 	// NumCandidates is 2^BitsPerDecision
 	NumCandidates = 1 << BitsPerDecision
 	// MaxSecretLength is the maximum encrypted payload length per segment in bytes
@@ -142,39 +142,30 @@ func (e *Encoder) encodeSegment(ctx context.Context, prompt string, encryptedPay
 
 // generateWithBits generates text while embedding bits through token selection from logprobs
 func (e *Encoder) generateWithBits(ctx context.Context, prompt string, bits []bool) (string, int, int, error) {
-	// Optimized approach using logprobs:
-	// 1. Generate one token with logprobs enabled
-	// 2. Select token from top_logprobs based on bit value
-	// 3. Append to result and continue
-
 	var result strings.Builder
 	bitIndex := 0
 	tokenCount := 0
 	currentPrompt := prompt
 
 	for bitIndex < len(bits) {
-		// Determine how many bits we can encode (limited by available candidates)
 		bitsToEncode := min(BitsPerDecision, len(bits)-bitIndex)
 
-		// Single LLM call with logprobs
 		resp, err := e.llmClient.Generate(ctx, currentPrompt, llm.GenerateOptions{
 			Temperature: 0.8,
 			TopK:        40,
-			NumPredict:  1, // Generate exactly 1 token
+			NumPredict:  1,
 			Seed:        promptToSeed(currentPrompt),
-		}, true) // logprobs=true
+		}, true)
 		if err != nil {
 			return "", 0, 0, fmt.Errorf("generation failed: %w", err)
 		}
 
-		// Parse logprobs
 		logprobItems, err := resp.ParseLogprobs()
 		if err != nil {
 			return "", 0, 0, fmt.Errorf("failed to parse logprobs: %w", err)
 		}
 
 		if len(logprobItems) == 0 || len(logprobItems[0].TopLogprobs) == 0 {
-			// Fallback to default response if no logprobs
 			if resp.Response == "" {
 				break
 			}
@@ -184,18 +175,14 @@ func (e *Encoder) generateWithBits(ctx context.Context, prompt string, bits []bo
 			continue
 		}
 
-		// Get available candidates from top_logprobs
 		candidates := filterCoverCandidates(logprobItems[0].TopLogprobs)
 		numCandidates := len(candidates)
 
-		// Adjust bits if not enough candidates
 		if numCandidates < (1 << bitsToEncode) {
-			// Reduce bits per decision if not enough candidates
 			for bitsToEncode > 0 && numCandidates < (1<<bitsToEncode) {
 				bitsToEncode--
 			}
 			if bitsToEncode == 0 {
-				// Use the top candidate, encode 0 bits
 				result.WriteString(candidates[0].Token)
 				currentPrompt = prompt + result.String()
 				tokenCount++
@@ -203,7 +190,6 @@ func (e *Encoder) generateWithBits(ctx context.Context, prompt string, bits []bo
 			}
 		}
 
-		// Calculate bit value and select token
 		bitValue := bitsToInt(bits[bitIndex : bitIndex+bitsToEncode])
 		selectedIndex := bitValue % (1 << bitsToEncode)
 		if selectedIndex >= numCandidates {
@@ -216,7 +202,6 @@ func (e *Encoder) generateWithBits(ctx context.Context, prompt string, bits []bo
 		tokenCount++
 		bitIndex += bitsToEncode
 
-		// Safety limit
 		if tokenCount > 500 {
 			break
 		}
@@ -289,6 +274,9 @@ func (d *Decoder) decodeSegment(ctx context.Context, coverText string, prompt st
 	currentPrompt := prompt
 	remainingText := coverText
 	tokenCount := 0
+	// allowTrimmed is true only for the first token, where TrimSpace during
+	// encoding may have removed a leading space from the cover text.
+	allowTrimmed := true
 
 	for len(remainingText) > 0 {
 		// Generate logprobs for current position
@@ -321,46 +309,40 @@ func (d *Decoder) decodeSegment(ctx context.Context, coverText string, prompt st
 			bitsToExtract--
 		}
 
-		// Find which candidate token matches the start of remainingText
+		// Find which candidate token matches the start of remainingText.
+		// With prefix-free candidates, the first match is unambiguous.
 		matchIndex := -1
 		matchedToken := ""
-		actualConsumed := "" // What we actually consume from remainingText
+		actualConsumed := ""
 		for i, cand := range candidates {
 			if i >= (1 << bitsToExtract) {
-				break // Only check candidates within encoding range
+				break
 			}
 			token := cand.Token
-			// Try direct match first
 			if strings.HasPrefix(remainingText, token) {
-				if len(token) > len(matchedToken) {
+				matchIndex = i
+				matchedToken = token
+				actualConsumed = token
+				break
+			}
+			// Trimmed match only for the very first token (handles TrimSpace)
+			if allowTrimmed {
+				trimmedToken := strings.TrimLeft(token, " ")
+				if trimmedToken != token && trimmedToken != "" && strings.HasPrefix(remainingText, trimmedToken) {
 					matchIndex = i
 					matchedToken = token
-					actualConsumed = token
-				}
-			}
-			// Also try matching trimmed token (handles leading space after TrimSpace)
-			trimmedToken := strings.TrimLeft(token, " ")
-			if trimmedToken != token && trimmedToken != "" && strings.HasPrefix(remainingText, trimmedToken) {
-				if len(trimmedToken) > len(actualConsumed) {
-					matchIndex = i
-					matchedToken = token          // Use original for prompt reconstruction
-					actualConsumed = trimmedToken // But only consume the trimmed version from remaining
+					actualConsumed = trimmedToken
+					break
 				}
 			}
 		}
 
 		if matchIndex < 0 {
-			// No match found - try to find any matching token (or its trimmed version) to continue
+			// No match in encoding range — try any candidate to advance
 			for _, cand := range candidates {
 				if strings.HasPrefix(remainingText, cand.Token) {
 					matchedToken = cand.Token
 					actualConsumed = cand.Token
-					break
-				}
-				trimmed := strings.TrimLeft(cand.Token, " ")
-				if trimmed != cand.Token && trimmed != "" && strings.HasPrefix(remainingText, trimmed) {
-					matchedToken = cand.Token
-					actualConsumed = trimmed
 					break
 				}
 			}
@@ -372,12 +354,13 @@ func (d *Decoder) decodeSegment(ctx context.Context, coverText string, prompt st
 				}
 				break
 			}
-			// Found token but not in encoding range, skip without extracting bits
 		} else if bitsToExtract > 0 {
-			// Extract bits from match index
 			bits := intToBits(matchIndex, bitsToExtract)
 			extractedBits = append(extractedBits, bits...)
 		}
+
+		// After first successful match, disable trimmed matching
+		allowTrimmed = false
 
 		// Advance past matched token
 		if actualConsumed != "" {
@@ -491,7 +474,31 @@ func filterCoverCandidates(candidates []llm.LogprobToken) []llm.LogprobToken {
 	if len(filtered) == 0 {
 		return candidates
 	}
-	return filtered
+	return makePrefixFree(filtered)
+}
+
+// makePrefixFree removes candidates whose token is a prefix of (or has a prefix in)
+// an already-accepted candidate. This ensures unambiguous token matching during decode.
+// Candidates are processed in logprob order (most probable first) so higher-probability
+// tokens are preferred.
+func makePrefixFree(candidates []llm.LogprobToken) []llm.LogprobToken {
+	result := make([]llm.LogprobToken, 0, len(candidates))
+	for _, c := range candidates {
+		conflict := false
+		for _, r := range result {
+			if strings.HasPrefix(c.Token, r.Token) || strings.HasPrefix(r.Token, c.Token) {
+				conflict = true
+				break
+			}
+		}
+		if !conflict {
+			result = append(result, c)
+		}
+	}
+	if len(result) == 0 {
+		return candidates
+	}
+	return result
 }
 
 func isAllowedCoverToken(token string) bool {
