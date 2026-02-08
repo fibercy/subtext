@@ -13,7 +13,7 @@ import (
 
 const (
 	DefaultBaseURL = "http://localhost:11434"
-	DefaultModel   = "qwen3:8b"
+	DefaultModel   = "llama3.1:8b"
 )
 
 // Client provides access to Ollama API

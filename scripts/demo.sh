@@ -65,13 +65,14 @@ echo "$COVER_TEXT"
 
 # 6. Analyze Cover Text
 echo -e "\n${GREEN}[6] Analyzing Cover Text...${NC}"
-# Clean up cover text for analysis (pass as argument)
-CLEAN_COVER=$(echo "$COVER_TEXT" | tr -d '\n')
-$STEGO_BIN analyze "$CLEAN_COVER"
+# For analyze, use single line (collapse whitespace) - this is just for display
+ANALYZE_TEXT=$(echo "$COVER_TEXT" | tr '\n' ' ')
+$STEGO_BIN analyze "$ANALYZE_TEXT"
 
 # 7. Decode (Real)
 echo -e "\n${GREEN}[7] Decrypting with Real Key...${NC}"
-$STEGO_BIN decode $ID_A "$CLEAN_COVER"
+# Use original cover text with segment separators intact
+$STEGO_BIN decode $ID_A "$COVER_TEXT" --topic "fitness"
 
 # 8. Baseline note
 echo -e "\n${GREEN}[8] Baseline Mode...${NC}"

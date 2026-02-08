@@ -161,6 +161,7 @@ func (e *Encoder) generateWithBits(ctx context.Context, prompt string, bits []bo
 			Temperature: 0.8,
 			TopK:        40,
 			NumPredict:  1, // Generate exactly 1 token
+			Seed:        promptToSeed(currentPrompt),
 		}, true) // logprobs=true
 		if err != nil {
 			return "", 0, 0, fmt.Errorf("generation failed: %w", err)
@@ -295,6 +296,7 @@ func (d *Decoder) decodeSegment(ctx context.Context, coverText string, prompt st
 			Temperature: 0.8,
 			TopK:        40,
 			NumPredict:  1,
+			Seed:        promptToSeed(currentPrompt),
 		}, true)
 		if err != nil {
 			return nil, fmt.Errorf("logprobs generation failed: %w", err)
@@ -322,28 +324,47 @@ func (d *Decoder) decodeSegment(ctx context.Context, coverText string, prompt st
 		// Find which candidate token matches the start of remainingText
 		matchIndex := -1
 		matchedToken := ""
+		actualConsumed := "" // What we actually consume from remainingText
 		for i, cand := range candidates {
 			if i >= (1 << bitsToExtract) {
 				break // Only check candidates within encoding range
 			}
-			if strings.HasPrefix(remainingText, cand.Token) {
-				// Prefer longest match for ambiguity resolution
-				if len(cand.Token) > len(matchedToken) {
+			token := cand.Token
+			// Try direct match first
+			if strings.HasPrefix(remainingText, token) {
+				if len(token) > len(matchedToken) {
 					matchIndex = i
-					matchedToken = cand.Token
+					matchedToken = token
+					actualConsumed = token
+				}
+			}
+			// Also try matching trimmed token (handles leading space after TrimSpace)
+			trimmedToken := strings.TrimLeft(token, " ")
+			if trimmedToken != token && trimmedToken != "" && strings.HasPrefix(remainingText, trimmedToken) {
+				if len(trimmedToken) > len(actualConsumed) {
+					matchIndex = i
+					matchedToken = token          // Use original for prompt reconstruction
+					actualConsumed = trimmedToken // But only consume the trimmed version from remaining
 				}
 			}
 		}
 
 		if matchIndex < 0 {
-			// No match found - try to find any matching token to continue
+			// No match found - try to find any matching token (or its trimmed version) to continue
 			for _, cand := range candidates {
 				if strings.HasPrefix(remainingText, cand.Token) {
 					matchedToken = cand.Token
+					actualConsumed = cand.Token
+					break
+				}
+				trimmed := strings.TrimLeft(cand.Token, " ")
+				if trimmed != cand.Token && trimmed != "" && strings.HasPrefix(remainingText, trimmed) {
+					matchedToken = cand.Token
+					actualConsumed = trimmed
 					break
 				}
 			}
-			if matchedToken == "" {
+			if actualConsumed == "" {
 				// Skip one character and try again
 				if len(remainingText) > 0 {
 					remainingText = remainingText[1:]
@@ -359,9 +380,9 @@ func (d *Decoder) decodeSegment(ctx context.Context, coverText string, prompt st
 		}
 
 		// Advance past matched token
-		if matchedToken != "" {
-			remainingText = strings.TrimPrefix(remainingText, matchedToken)
-			currentPrompt = currentPrompt + matchedToken
+		if actualConsumed != "" {
+			remainingText = strings.TrimPrefix(remainingText, actualConsumed)
+			currentPrompt = currentPrompt + matchedToken // Use original token for prompt
 		}
 		tokenCount++
 
@@ -606,6 +627,13 @@ func getSeed(prompt string, variant int) int {
 	h := fnv.New32a()
 	h.Write([]byte(prompt))
 	h.Write([]byte{byte(variant)})
+	return int(h.Sum32())
+}
+
+// promptToSeed generates a deterministic seed from a prompt for reproducible LLM output
+func promptToSeed(prompt string) int {
+	h := fnv.New32a()
+	h.Write([]byte(prompt))
 	return int(h.Sum32())
 }
 

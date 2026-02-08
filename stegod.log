@@ -1,4 +1,3028 @@
-2026/02/07 16:50:52 Using database: /Users/cy/.stegochat/stegochat.db
-2026/02/07 16:50:52 Connected to Ollama at http://localhost:11434 (model: llama3.1:8b)
-2026/02/07 16:50:52 Stego daemon listening on port 50051
-2026/02/07 16:50:55 Shutting down server...
+2026/02/08 00:43:52 Using database: /Users/cy/.stegochat/stegochat.db
+2026/02/08 00:43:52 Connected to Ollama at http://localhost:11434 (model: llama3.1:8b)
+2026/02/08 00:43:52 Stego daemon listening on port 50051
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+[LLM Resp] Response: i
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i
+[LLM Resp] Response:  just
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm
+[LLM Resp] Response:  going
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading
+[LLM Resp] Response:  out
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to
+[LLM Resp] Response:  the
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that
+[LLM Resp] Response:  new
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning
+[LLM Resp] Response:  class
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes
+[LLM Resp] Response:  at
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight
+[LLM Resp] Response:  at
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with
+[LLM Resp] Response:  em
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some
+[LLM Resp] Response:  coworkers
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other
+[LLM Resp] Response:  coworkers
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl
+[LLM Resp] Response:  from
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if
+[LLM Resp] Response:  you
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the
+[LLM Resp] Response:  traffic
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio
+[LLM Resp] Response:  isn
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn
+[LLM Resp] Response: 't
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y
+[LLM Resp] Response:  cancel
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close
+[LLM Resp] Response:  early
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly
+[LLM Resp] Response:  lol
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or
+[LLM Resp] Response:  anything
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something
+[LLM Resp] Response:  like
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's
+[LLM Resp] Response:  up
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not
+[LLM Resp] Response:  right
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong
+[LLM Resp] Response:  with
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i
+[LLM Resp] Response:  guess
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm
+[LLM Resp] Response:  going
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely
+[LLM Resp] Response:  gonna
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking
+[LLM Resp] Response:  like
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow
+[LLM Resp] Response:  too
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at
+[LLM Resp] Response:  lunch
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my
+[LLM Resp] Response:  home
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house
+[LLM Resp] Response:  though
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to
+[LLM Resp] Response:  get
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work
+[LLM Resp] Response:  out
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it
+[LLM Resp] Response:  off
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+
+[LLM Resp] Response: yeah
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey
+[LLM Resp] Response: ,
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i
+[LLM Resp] Response:  just
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm
+[LLM Resp] Response:  running
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running
+[LLM Resp] Response:  low
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really
+[LLM Resp] Response:  late
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close
+[LLM Resp] Response:  to
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here
+[LLM Resp] Response:  but
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can
+[LLM Resp] Response:  you
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk
+[LLM Resp] Response:  on
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more
+[LLM Resp] Response:  about
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when
+[LLM Resp] Response:  you
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I
+[LLM Resp] Response:  get
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll
+[LLM Resp] Response:  make
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass
+[LLM Resp] Response:  the
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in
+[LLM Resp] Response:  front
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front
+[LLM Resp] Response:  of
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front 
+[LLM Resp] Response:  of
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the
+[LLM Resp] Response:  building
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store
+[LLM Resp] Response:  and
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we
+[LLM Resp] Response:  need
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were
+[LLM Resp] Response:  planning
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning
+[LLM Resp] Response:  to
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at
+[LLM Resp] Response:  and
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch
+[LLM Resp] Response:  today
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe
+[LLM Resp] Response:  go
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip
+[LLM Resp] Response:  today
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee
+[LLM Resp] Response:  and
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and
+[LLM Resp] Response:  just
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go
+[LLM Resp] Response:  straight
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 
+[LLM Resp] Response:  instead
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10
+[LLM Resp] Response: :
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm
+[LLM Resp] Response:  instead
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at
+[LLM Resp] Response:  our
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 
+[LLM Resp] Response: 5
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24
+[LLM Resp] Response:  hour
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+
+[LLM Resp] Response: running
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey
+[LLM Resp] Response:  no
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i
+[LLM Resp] Response:  just
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm
+[LLM Resp] Response:  running
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just
+[LLM Resp] Response:  finishing
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking
+[LLM Resp] Response:  a
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care
+[LLM Resp] Response:  of
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I
+[LLM Resp] Response:  had
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate
+[LLM Resp] Response:  this
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an
+[LLM Resp] Response:  apple
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple
+[LLM Resp] Response:  now
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple after
+[LLM Resp] Response:  your
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple after lunch
+[LLM Resp] Response:  still
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple after lunch and
+[LLM Resp] Response:  did
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple after lunch and ran
+[LLM Resp] Response:  a
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple after lunch and ran a
+[LLM Resp] Response:  few
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple after lunch and ran a 
+[LLM Resp] Response: 7
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple after lunch and ran a 10
+[LLM Resp] Response: k
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple after lunch and ran a 10 k
+[LLM Resp] Response:  now
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple after lunch and ran a 10 k but
+[LLM Resp] Response:  need
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple after lunch and ran a 10 k but not
+[LLM Resp] Response:  feeling
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple after lunch and ran a 10 k but not going
+[LLM Resp] Response:  so
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple after lunch and ran a 10 k but not going easy
+[LLM Resp] Response:  yet
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple after lunch and ran a 10 k but not going easy so
+[LLM Resp] Response:  should
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+[LLM Resp] Response: i
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i
+[LLM Resp] Response:  just
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm
+[LLM Resp] Response:  going
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading
+[LLM Resp] Response:  out
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to
+[LLM Resp] Response:  the
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that
+[LLM Resp] Response:  new
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning
+[LLM Resp] Response:  class
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes
+[LLM Resp] Response:  at
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight
+[LLM Resp] Response:  at
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with
+[LLM Resp] Response:  em
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some
+[LLM Resp] Response:  coworkers
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other
+[LLM Resp] Response:  coworkers
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl
+[LLM Resp] Response:  from
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if
+[LLM Resp] Response:  you
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the
+[LLM Resp] Response:  traffic
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio
+[LLM Resp] Response:  isn
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn
+[LLM Resp] Response: 't
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y
+[LLM Resp] Response:  cancel
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close
+[LLM Resp] Response:  early
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly
+[LLM Resp] Response:  lol
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or
+[LLM Resp] Response:  whatever
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something
+[LLM Resp] Response:  like
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's
+[LLM Resp] Response:  up
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not
+[LLM Resp] Response:  right
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong
+[LLM Resp] Response:  with
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i
+[LLM Resp] Response:  guess
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm
+[LLM Resp] Response:  going
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely
+[LLM Resp] Response:  gonna
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking
+[LLM Resp] Response:  like
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow
+[LLM Resp] Response:  too
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at
+[LLM Resp] Response:  lunch
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my
+[LLM Resp] Response:  home
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house
+[LLM Resp] Response:  though
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to
+[LLM Resp] Response:  get
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work
+[LLM Resp] Response:  out
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it
+[LLM Resp] Response:  off
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+
+[LLM Resp] Response: yeah
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey
+[LLM Resp] Response: ,
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i
+[LLM Resp] Response:  just
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm
+[LLM Resp] Response:  running
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running
+[LLM Resp] Response:  low
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really
+[LLM Resp] Response:  late
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close
+[LLM Resp] Response:  to
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here
+[LLM Resp] Response:  but
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can
+[LLM Resp] Response:  you
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk
+[LLM Resp] Response:  on
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more
+[LLM Resp] Response:  about
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when
+[LLM Resp] Response:  you
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I
+[LLM Resp] Response:  get
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll
+[LLM Resp] Response:  make
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass
+[LLM Resp] Response:  the
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in
+[LLM Resp] Response:  front
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front
+[LLM Resp] Response:  of
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front 
+[LLM Resp] Response:  of
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the
+[LLM Resp] Response:  building
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store
+[LLM Resp] Response:  and
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we
+[LLM Resp] Response:  need
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were
+[LLM Resp] Response:  planning
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning
+[LLM Resp] Response:  to
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at
+[LLM Resp] Response:  and
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch
+[LLM Resp] Response:  today
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe
+[LLM Resp] Response:  go
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip
+[LLM Resp] Response:  today
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee
+[LLM Resp] Response:  and
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and
+[LLM Resp] Response:  just
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go
+[LLM Resp] Response:  straight
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 
+[LLM Resp] Response:  instead
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10
+[LLM Resp] Response: :
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm
+[LLM Resp] Response:  instead
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at
+[LLM Resp] Response:  our
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 
+[LLM Resp] Response: 5
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+i'm heading to that spinning classes tonight with some other ppl if the studio didn'y close unexpectedly or something's not wrong i'm definitely biking tomorrow at my house to work it back
+Next message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24
+[LLM Resp] Response:  hour
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+
+[LLM Resp] Response: running
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey
+[LLM Resp] Response:  no
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i
+[LLM Resp] Response:  just
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm
+[LLM Resp] Response:  running
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just
+[LLM Resp] Response:  finishing
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking
+[LLM Resp] Response:  a
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care
+[LLM Resp] Response:  of
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I
+[LLM Resp] Response:  had
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate
+[LLM Resp] Response:  this
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an
+[LLM Resp] Response:  apple
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple
+[LLM Resp] Response:  now
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple after
+[LLM Resp] Response:  your
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple after lunch
+[LLM Resp] Response:  still
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple after lunch and
+[LLM Resp] Response:  did
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple after lunch and ran
+[LLM Resp] Response:  a
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple after lunch and ran a
+[LLM Resp] Response:  few
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple after lunch and ran a 
+[LLM Resp] Response: 7
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple after lunch and ran a 10
+[LLM Resp] Response: k
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple after lunch and ran a 10 k
+[LLM Resp] Response:  now
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple after lunch and ran a 10 k but
+[LLM Resp] Response:  need
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple after lunch and ran a 10 k but not
+[LLM Resp] Response:  feeling
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple after lunch and ran a 10 k but not going
+[LLM Resp] Response:  so
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple after lunch and ran a 10 k but not going easy
+[LLM Resp] Response:  yet
+[LLM Req] Prompt: Write one natural everyday text message about fitness.
+Hard rules:
+- 1 to 2 short sentences only
+- 12 to 28 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no explanations about style or generation
+- output only the message text
+
+Continue the same chat thread from the same person.
+Keep continuity with details and tone from the previous message.
+Previous message:
+hey i'm running really close here can talk more when I'll pass in front  the store we were planning at lunch maybe skip coffee and go 10pm at 24?
+Next message:
+hey i'm just taking care I ate an apple after lunch and ran a 10 k but not going easy so
+[LLM Resp] Response:  should
+2026/02/08 00:44:28 Shutting down server...
