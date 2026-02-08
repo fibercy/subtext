@@ -1085,6 +1085,102 @@ func (x *ContinueInteractiveEncodeResponse) GetDone() bool {
 	return false
 }
 
+type GeneratePeerReplyRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`                      // The cover text just received
+	TopicHint     string                 `protobuf:"bytes,2,opt,name=topic_hint,json=topicHint,proto3" json:"topic_hint,omitempty"` // Topic for contextual reply
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GeneratePeerReplyRequest) Reset() {
+	*x = GeneratePeerReplyRequest{}
+	mi := &file_proto_stego_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GeneratePeerReplyRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GeneratePeerReplyRequest) ProtoMessage() {}
+
+func (x *GeneratePeerReplyRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_stego_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GeneratePeerReplyRequest.ProtoReflect.Descriptor instead.
+func (*GeneratePeerReplyRequest) Descriptor() ([]byte, []int) {
+	return file_proto_stego_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *GeneratePeerReplyRequest) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *GeneratePeerReplyRequest) GetTopicHint() string {
+	if x != nil {
+		return x.TopicHint
+	}
+	return ""
+}
+
+type GeneratePeerReplyResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Reply         string                 `protobuf:"bytes,1,opt,name=reply,proto3" json:"reply,omitempty"` // Natural reply text (no hidden data)
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GeneratePeerReplyResponse) Reset() {
+	*x = GeneratePeerReplyResponse{}
+	mi := &file_proto_stego_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GeneratePeerReplyResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GeneratePeerReplyResponse) ProtoMessage() {}
+
+func (x *GeneratePeerReplyResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_stego_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GeneratePeerReplyResponse.ProtoReflect.Descriptor instead.
+func (*GeneratePeerReplyResponse) Descriptor() ([]byte, []int) {
+	return file_proto_stego_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *GeneratePeerReplyResponse) GetReply() string {
+	if x != nil {
+		return x.Reply
+	}
+	return ""
+}
+
 type AddDecoyKeyRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
@@ -1095,7 +1191,7 @@ type AddDecoyKeyRequest struct {
 
 func (x *AddDecoyKeyRequest) Reset() {
 	*x = AddDecoyKeyRequest{}
-	mi := &file_proto_stego_proto_msgTypes[17]
+	mi := &file_proto_stego_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1107,7 +1203,7 @@ func (x *AddDecoyKeyRequest) String() string {
 func (*AddDecoyKeyRequest) ProtoMessage() {}
 
 func (x *AddDecoyKeyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_stego_proto_msgTypes[17]
+	mi := &file_proto_stego_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1120,7 +1216,7 @@ func (x *AddDecoyKeyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddDecoyKeyRequest.ProtoReflect.Descriptor instead.
 func (*AddDecoyKeyRequest) Descriptor() ([]byte, []int) {
-	return file_proto_stego_proto_rawDescGZIP(), []int{17}
+	return file_proto_stego_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *AddDecoyKeyRequest) GetSessionId() string {
@@ -1147,7 +1243,7 @@ type AddDecoyKeyResponse struct {
 
 func (x *AddDecoyKeyResponse) Reset() {
 	*x = AddDecoyKeyResponse{}
-	mi := &file_proto_stego_proto_msgTypes[18]
+	mi := &file_proto_stego_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1159,7 +1255,7 @@ func (x *AddDecoyKeyResponse) String() string {
 func (*AddDecoyKeyResponse) ProtoMessage() {}
 
 func (x *AddDecoyKeyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_stego_proto_msgTypes[18]
+	mi := &file_proto_stego_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1172,7 +1268,7 @@ func (x *AddDecoyKeyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddDecoyKeyResponse.ProtoReflect.Descriptor instead.
 func (*AddDecoyKeyResponse) Descriptor() ([]byte, []int) {
-	return file_proto_stego_proto_rawDescGZIP(), []int{18}
+	return file_proto_stego_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *AddDecoyKeyResponse) GetDecoyKey() []byte {
@@ -1279,7 +1375,13 @@ const file_proto_stego_proto_rawDesc = "" +
 	"cover_text\x18\x02 \x01(\tR\tcoverText\x12#\n" +
 	"\rsegment_index\x18\x03 \x01(\x05R\fsegmentIndex\x12%\n" +
 	"\x0etotal_segments\x18\x04 \x01(\x05R\rtotalSegments\x12\x12\n" +
-	"\x04done\x18\x05 \x01(\bR\x04done\"X\n" +
+	"\x04done\x18\x05 \x01(\bR\x04done\"S\n" +
+	"\x18GeneratePeerReplyRequest\x12\x18\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\x12\x1d\n" +
+	"\n" +
+	"topic_hint\x18\x02 \x01(\tR\ttopicHint\"1\n" +
+	"\x19GeneratePeerReplyResponse\x12\x14\n" +
+	"\x05reply\x18\x01 \x01(\tR\x05reply\"X\n" +
 	"\x12AddDecoyKeyRequest\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12#\n" +
@@ -1292,7 +1394,7 @@ const file_proto_stego_proto_rawDesc = "" +
 	"\x19SESSION_STATE_UNSPECIFIED\x10\x00\x12&\n" +
 	"\"SESSION_STATE_PENDING_KEY_EXCHANGE\x10\x01\x12\x18\n" +
 	"\x14SESSION_STATE_ACTIVE\x10\x02\x12\x19\n" +
-	"\x15SESSION_STATE_EXPIRED\x10\x032\xfa\x06\n" +
+	"\x15SESSION_STATE_EXPIRED\x10\x032\xd8\a\n" +
 	"\fStegoService\x12B\n" +
 	"\rCreateSession\x12\x1e.stego.v1.CreateSessionRequest\x1a\x11.stego.v1.Session\x12<\n" +
 	"\n" +
@@ -1303,7 +1405,8 @@ const file_proto_stego_proto_rawDesc = "" +
 	"\rEncodeMessage\x12\x1e.stego.v1.EncodeMessageRequest\x1a\x1f.stego.v1.EncodeMessageResponse\x12P\n" +
 	"\rDecodeMessage\x12\x1e.stego.v1.DecodeMessageRequest\x1a\x1f.stego.v1.DecodeMessageResponse\x12k\n" +
 	"\x16StartInteractiveEncode\x12'.stego.v1.StartInteractiveEncodeRequest\x1a(.stego.v1.StartInteractiveEncodeResponse\x12t\n" +
-	"\x19ContinueInteractiveEncode\x12*.stego.v1.ContinueInteractiveEncodeRequest\x1a+.stego.v1.ContinueInteractiveEncodeResponse\x12J\n" +
+	"\x19ContinueInteractiveEncode\x12*.stego.v1.ContinueInteractiveEncodeRequest\x1a+.stego.v1.ContinueInteractiveEncodeResponse\x12\\\n" +
+	"\x11GeneratePeerReply\x12\".stego.v1.GeneratePeerReplyRequest\x1a#.stego.v1.GeneratePeerReplyResponse\x12J\n" +
 	"\vAddDecoyKey\x12\x1c.stego.v1.AddDecoyKeyRequest\x1a\x1d.stego.v1.AddDecoyKeyResponseB\x1fZ\x1dgithub.com/cy/stegochat/protob\x06proto3"
 
 var (
@@ -1319,7 +1422,7 @@ func file_proto_stego_proto_rawDescGZIP() []byte {
 }
 
 var file_proto_stego_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_proto_stego_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
+var file_proto_stego_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_proto_stego_proto_goTypes = []any{
 	(SessionState)(0),                         // 0: stego.v1.SessionState
 	(*CreateSessionRequest)(nil),              // 1: stego.v1.CreateSessionRequest
@@ -1339,8 +1442,10 @@ var file_proto_stego_proto_goTypes = []any{
 	(*StartInteractiveEncodeResponse)(nil),    // 15: stego.v1.StartInteractiveEncodeResponse
 	(*ContinueInteractiveEncodeRequest)(nil),  // 16: stego.v1.ContinueInteractiveEncodeRequest
 	(*ContinueInteractiveEncodeResponse)(nil), // 17: stego.v1.ContinueInteractiveEncodeResponse
-	(*AddDecoyKeyRequest)(nil),                // 18: stego.v1.AddDecoyKeyRequest
-	(*AddDecoyKeyResponse)(nil),               // 19: stego.v1.AddDecoyKeyResponse
+	(*GeneratePeerReplyRequest)(nil),          // 18: stego.v1.GeneratePeerReplyRequest
+	(*GeneratePeerReplyResponse)(nil),         // 19: stego.v1.GeneratePeerReplyResponse
+	(*AddDecoyKeyRequest)(nil),                // 20: stego.v1.AddDecoyKeyRequest
+	(*AddDecoyKeyResponse)(nil),               // 21: stego.v1.AddDecoyKeyResponse
 }
 var file_proto_stego_proto_depIdxs = []int32{
 	5,  // 0: stego.v1.ListSessionsResponse.sessions:type_name -> stego.v1.Session
@@ -1354,19 +1459,21 @@ var file_proto_stego_proto_depIdxs = []int32{
 	12, // 8: stego.v1.StegoService.DecodeMessage:input_type -> stego.v1.DecodeMessageRequest
 	14, // 9: stego.v1.StegoService.StartInteractiveEncode:input_type -> stego.v1.StartInteractiveEncodeRequest
 	16, // 10: stego.v1.StegoService.ContinueInteractiveEncode:input_type -> stego.v1.ContinueInteractiveEncodeRequest
-	18, // 11: stego.v1.StegoService.AddDecoyKey:input_type -> stego.v1.AddDecoyKeyRequest
-	5,  // 12: stego.v1.StegoService.CreateSession:output_type -> stego.v1.Session
-	5,  // 13: stego.v1.StegoService.GetSession:output_type -> stego.v1.Session
-	4,  // 14: stego.v1.StegoService.ListSessions:output_type -> stego.v1.ListSessionsResponse
-	7,  // 15: stego.v1.StegoService.InitiateKeyExchange:output_type -> stego.v1.InitiateKeyExchangeResponse
-	9,  // 16: stego.v1.StegoService.CompleteKeyExchange:output_type -> stego.v1.CompleteKeyExchangeResponse
-	11, // 17: stego.v1.StegoService.EncodeMessage:output_type -> stego.v1.EncodeMessageResponse
-	13, // 18: stego.v1.StegoService.DecodeMessage:output_type -> stego.v1.DecodeMessageResponse
-	15, // 19: stego.v1.StegoService.StartInteractiveEncode:output_type -> stego.v1.StartInteractiveEncodeResponse
-	17, // 20: stego.v1.StegoService.ContinueInteractiveEncode:output_type -> stego.v1.ContinueInteractiveEncodeResponse
-	19, // 21: stego.v1.StegoService.AddDecoyKey:output_type -> stego.v1.AddDecoyKeyResponse
-	12, // [12:22] is the sub-list for method output_type
-	2,  // [2:12] is the sub-list for method input_type
+	18, // 11: stego.v1.StegoService.GeneratePeerReply:input_type -> stego.v1.GeneratePeerReplyRequest
+	20, // 12: stego.v1.StegoService.AddDecoyKey:input_type -> stego.v1.AddDecoyKeyRequest
+	5,  // 13: stego.v1.StegoService.CreateSession:output_type -> stego.v1.Session
+	5,  // 14: stego.v1.StegoService.GetSession:output_type -> stego.v1.Session
+	4,  // 15: stego.v1.StegoService.ListSessions:output_type -> stego.v1.ListSessionsResponse
+	7,  // 16: stego.v1.StegoService.InitiateKeyExchange:output_type -> stego.v1.InitiateKeyExchangeResponse
+	9,  // 17: stego.v1.StegoService.CompleteKeyExchange:output_type -> stego.v1.CompleteKeyExchangeResponse
+	11, // 18: stego.v1.StegoService.EncodeMessage:output_type -> stego.v1.EncodeMessageResponse
+	13, // 19: stego.v1.StegoService.DecodeMessage:output_type -> stego.v1.DecodeMessageResponse
+	15, // 20: stego.v1.StegoService.StartInteractiveEncode:output_type -> stego.v1.StartInteractiveEncodeResponse
+	17, // 21: stego.v1.StegoService.ContinueInteractiveEncode:output_type -> stego.v1.ContinueInteractiveEncodeResponse
+	19, // 22: stego.v1.StegoService.GeneratePeerReply:output_type -> stego.v1.GeneratePeerReplyResponse
+	21, // 23: stego.v1.StegoService.AddDecoyKey:output_type -> stego.v1.AddDecoyKeyResponse
+	13, // [13:24] is the sub-list for method output_type
+	2,  // [2:13] is the sub-list for method input_type
 	2,  // [2:2] is the sub-list for extension type_name
 	2,  // [2:2] is the sub-list for extension extendee
 	0,  // [0:2] is the sub-list for field type_name
@@ -1383,7 +1490,7 @@ func file_proto_stego_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_stego_proto_rawDesc), len(file_proto_stego_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   19,
+			NumMessages:   21,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

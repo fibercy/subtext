@@ -1,84 +1,96 @@
 #!/bin/bash
-# Demo script for Steganographic Chat
+# Demo script for Steganographic Chat with peer reply simulation
 
-# Colors
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
+CYAN='\033[0;36m'
 RED='\033[0;31m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-STEGO_BIN="./bin/stego"
-STEGOD_BIN="./bin/stegod"
+STEGO="./bin/stego"
+STEGOD="./bin/stegod"
+TMP=$(mktemp -d)
+TOPIC="fitness"
+SECRET="Meet at dock 7 at midnight"
+
+cleanup() { kill $PID 2>/dev/null; rm -rf "$TMP"; }
+trap cleanup EXIT
 
 echo -e "${BLUE}=== StegoChat Demo ===${NC}"
 
-# 1. Start Daemon
+# Start daemon
 echo -e "\n${GREEN}[1] Starting Daemon...${NC}"
-pkill stegod
-$STEGOD_BIN > stegod.log 2>&1 &
-STEGOD_PID=$!
+pkill stegod 2>/dev/null
+$STEGOD > stegod.log 2>&1 &
+PID=$!
 sleep 2
-echo "Daemon running (PID: $STEGOD_PID)"
 
-# 2. Status Check
-echo -e "\n${GREEN}[2] Checking Status...${NC}"
-$STEGO_BIN status
+# Check status
+$STEGO status
 
-# 3. Create Sessions
-echo -e "\n${GREEN}[3] Creating Sessions (Alice & Bob)...${NC}"
-# We'll simulate two users by using one daemon but creating sessions representing "peers"
-# In a real scenario, this would be on two different machines
+# Create session + key exchange
+echo -e "\n${GREEN}[2] Session Setup...${NC}"
+OUT=$($STEGO session create "alice@example.com" --name "Alice")
+SID=$(echo "$OUT" | grep "ID:" | awk '{print $2}')
+KEY=$($STEGO session key-exchange $SID | grep -v "Your public key")
+$STEGO session complete-key-exchange $SID $KEY > /dev/null
+echo "Session $SID ready"
 
-# Session A: Talking to Alice
-OUT_A=$($STEGO_BIN session create "alice@example.com" --name "Alice")
-ID_A=$(echo "$OUT_A" | grep "ID:" | awk '{print $2}')
-echo "Created session for Alice: $ID_A"
+# Interactive encode
+echo -e "\n${GREEN}[3] Encoding: '$SECRET' (topic: $TOPIC)${NC}"
 
-# Session B: Talking to Bob
-OUT_B=$($STEGO_BIN session create "bob@example.com" --name "Bob")
-ID_B=$(echo "$OUT_B" | grep "ID:" | awk '{print $2}')
-echo "Created session for Bob: $ID_B"
+# convo start --raw outputs: flow_id\tcover_text\tdone
+RAW=$($STEGO convo start $SID "$SECRET" --topic "$TOPIC" --raw)
+FLOW=$(printf '%s' "$RAW" | cut -f1)
+COVER=$(printf '%s' "$RAW" | cut -f2)
+DONE=$(printf '%s' "$RAW" | cut -f3)
 
-# 4. Key Exchange (Simulated)
-echo -e "\n${GREEN}[4] Performing Key Exchange...${NC}"
-KEY_A=$($STEGO_BIN session key-exchange $ID_A | grep -v "Your public key")
-KEY_B=$($STEGO_BIN session key-exchange $ID_B | grep -v "Your public key")
+echo -e "\n${BLUE}--- Conversation ---${NC}"
+echo -e "${CYAN}Alice:${NC} $COVER"
 
-echo "Alice Key: ${KEY_A:0:16}..."
-echo "Bob Key:   ${KEY_B:0:16}..."
+# Save cover text for segment 1
+printf '%s' "$COVER" > "$TMP/seg1.txt"
+N=1
 
-# Complete exchange (Alice adds Bob, Bob adds Alice - simulating network exchange)
-$STEGO_BIN session complete-key-exchange $ID_A $KEY_B > /dev/null
-echo "Alice linked with Bob's key"
+# Collect decode args
+DECODE_ARGS=("--cover-file" "$TMP/all.txt" "--topic" "$TOPIC")
 
-# 5. Send Secret Message (baseline mode: no decoy)
-echo -e "\n${GREEN}[5] Encoding Secret Message (No Decoy)...${NC}"
-echo "Secret: 'Meet at dock 7 at midnight'"
-echo "Topic:  'fitness'"
+while [ "$DONE" = "0" ]; do
+    # Peer reply
+    REPLY=$($STEGO reply "$COVER" --topic "$TOPIC" --raw)
+    echo -e "${GREEN}Bob:${NC}   $REPLY"
+    DECODE_ARGS[${#DECODE_ARGS[@]}]="--peer-reply"
+    DECODE_ARGS[${#DECODE_ARGS[@]}]="$REPLY"
 
-# Simulating no LLM by default (unless user has Ollama running), so we expect placeholder
-# But we'll capture the output anyway
-COVER_TEXT=$($STEGO_BIN encode $ID_A "Meet at dock 7 at midnight" --topic "fitness" --raw)
+    # Next segment
+    RAW=$($STEGO convo next "$FLOW" "$REPLY" --raw)
+    COVER=$(printf '%s' "$RAW" | cut -f2)
+    DONE=$(printf '%s' "$RAW" | cut -f3)
+    N=$((N + 1))
+    printf '%s' "$COVER" > "$TMP/seg${N}.txt"
+    echo -e "${CYAN}Alice:${NC} $COVER"
+done
 
-echo -e "\n${BLUE}Generated Cover Text:${NC}"
-echo "$COVER_TEXT"
+echo -e "${BLUE}--- End ($N segments) ---${NC}"
 
-# 6. Analyze Cover Text
-echo -e "\n${GREEN}[6] Analyzing Cover Text...${NC}"
-# For analyze, use single line (collapse whitespace) - this is just for display
-ANALYZE_TEXT=$(echo "$COVER_TEXT" | tr '\n' ' ')
-$STEGO_BIN analyze "$ANALYZE_TEXT"
+# Assemble cover file with separators
+cat "$TMP/seg1.txt" > "$TMP/all.txt"
+i=2
+while [ $i -le $N ]; do
+    printf '\n\n---SEG---\n\n' >> "$TMP/all.txt"
+    cat "$TMP/seg${i}.txt" >> "$TMP/all.txt"
+    i=$((i + 1))
+done
 
-# 7. Decode (Real)
-echo -e "\n${GREEN}[7] Decrypting with Real Key...${NC}"
-# Use original cover text with segment separators intact
-$STEGO_BIN decode $ID_A "$COVER_TEXT" --topic "fitness"
+# Decode
+echo -e "\n${GREEN}[4] Decoding...${NC}"
+DECODED=$($STEGO convo decode "$SID" "${DECODE_ARGS[@]}" 2>&1)
+echo "Decoded: $DECODED"
 
-# 8. Baseline note
-echo -e "\n${GREEN}[8] Baseline Mode...${NC}"
-echo "Decoy flow is disabled in this demo run."
+if [ "$DECODED" = "$SECRET" ]; then
+    echo -e "${GREEN}Round-trip successful!${NC}"
+else
+    echo -e "${RED}Round-trip FAILED: expected '$SECRET'${NC}"
+fi
 
-echo -e "\n${BLUE}=== Demo Complete ===${NC}"
-
-# Cleanup
-kill $STEGOD_PID
+echo -e "\n${BLUE}=== Done ===${NC}"

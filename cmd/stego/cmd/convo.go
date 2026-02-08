@@ -42,7 +42,12 @@ var convoStartCmd = &cobra.Command{
 
 		raw, _ := cmd.Flags().GetBool("raw")
 		if raw {
-			fmt.Print(resp.CoverText)
+			// Machine-parseable: flow_id<TAB>cover_text<TAB>done
+			done := "0"
+			if resp.Done {
+				done = "1"
+			}
+			fmt.Printf("%s\t%s\t%s", resp.FlowId, resp.CoverText, done)
 			return
 		}
 
@@ -79,7 +84,12 @@ var convoNextCmd = &cobra.Command{
 
 		raw, _ := cmd.Flags().GetBool("raw")
 		if raw {
-			fmt.Print(resp.CoverText)
+			// Machine-parseable: flow_id<TAB>cover_text<TAB>done
+			done := "0"
+			if resp.Done {
+				done = "1"
+			}
+			fmt.Printf("%s\t%s\t%s", resp.FlowId, resp.CoverText, done)
 			return
 		}
 

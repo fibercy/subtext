@@ -210,6 +210,39 @@ func (e *Encoder) generateWithBits(ctx context.Context, prompt string, bits []bo
 	return strings.TrimSpace(result.String()), tokenCount, bitIndex, nil
 }
 
+// GenerateReply produces a plain (non-steganographic) conversational reply to a
+// received message. The reply respects the topic and conversation context so
+// that the overall dialogue reads naturally.
+func (e *Encoder) GenerateReply(ctx context.Context, receivedMessage, topic string) (string, error) {
+	if topic == "" {
+		topic = "casual chat"
+	}
+	prompt := fmt.Sprintf(`Your friend texted you about %s: "%s"
+Reply in 1 short sentence. Casual, lowercase, no quotes, no explanations.
+Reply:`, topic, receivedMessage)
+
+	resp, err := e.llmClient.Generate(ctx, prompt, llm.GenerateOptions{
+		Temperature: 0.9,
+		TopK:        40,
+		NumPredict:  40,
+		Stop:        []string{"\n", ".", "!"},
+	}, false)
+	if err != nil {
+		return "", fmt.Errorf("reply generation failed: %w", err)
+	}
+
+	reply := strings.TrimSpace(resp.Response)
+	// Strip any wrapping quotes the LLM might add
+	if len(reply) >= 2 && reply[0] == '"' && reply[len(reply)-1] == '"' {
+		reply = reply[1 : len(reply)-1]
+	}
+	// Take only the first line to avoid meta-commentary
+	if idx := strings.IndexAny(reply, "\n\r"); idx >= 0 {
+		reply = strings.TrimSpace(reply[:idx])
+	}
+	return reply, nil
+}
+
 // Decoder handles steganographic decoding of messages from cover text
 type Decoder struct {
 	llmClient *llm.Client

@@ -28,6 +28,7 @@ const (
 	StegoService_DecodeMessage_FullMethodName             = "/stego.v1.StegoService/DecodeMessage"
 	StegoService_StartInteractiveEncode_FullMethodName    = "/stego.v1.StegoService/StartInteractiveEncode"
 	StegoService_ContinueInteractiveEncode_FullMethodName = "/stego.v1.StegoService/ContinueInteractiveEncode"
+	StegoService_GeneratePeerReply_FullMethodName         = "/stego.v1.StegoService/GeneratePeerReply"
 	StegoService_AddDecoyKey_FullMethodName               = "/stego.v1.StegoService/AddDecoyKey"
 )
 
@@ -49,6 +50,8 @@ type StegoServiceClient interface {
 	DecodeMessage(ctx context.Context, in *DecodeMessageRequest, opts ...grpc.CallOption) (*DecodeMessageResponse, error)
 	StartInteractiveEncode(ctx context.Context, in *StartInteractiveEncodeRequest, opts ...grpc.CallOption) (*StartInteractiveEncodeResponse, error)
 	ContinueInteractiveEncode(ctx context.Context, in *ContinueInteractiveEncodeRequest, opts ...grpc.CallOption) (*ContinueInteractiveEncodeResponse, error)
+	// Peer reply generation (plain LLM text, no steganography)
+	GeneratePeerReply(ctx context.Context, in *GeneratePeerReplyRequest, opts ...grpc.CallOption) (*GeneratePeerReplyResponse, error)
 	// Deniability
 	AddDecoyKey(ctx context.Context, in *AddDecoyKeyRequest, opts ...grpc.CallOption) (*AddDecoyKeyResponse, error)
 }
@@ -151,6 +154,16 @@ func (c *stegoServiceClient) ContinueInteractiveEncode(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *stegoServiceClient) GeneratePeerReply(ctx context.Context, in *GeneratePeerReplyRequest, opts ...grpc.CallOption) (*GeneratePeerReplyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GeneratePeerReplyResponse)
+	err := c.cc.Invoke(ctx, StegoService_GeneratePeerReply_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *stegoServiceClient) AddDecoyKey(ctx context.Context, in *AddDecoyKeyRequest, opts ...grpc.CallOption) (*AddDecoyKeyResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AddDecoyKeyResponse)
@@ -179,6 +192,8 @@ type StegoServiceServer interface {
 	DecodeMessage(context.Context, *DecodeMessageRequest) (*DecodeMessageResponse, error)
 	StartInteractiveEncode(context.Context, *StartInteractiveEncodeRequest) (*StartInteractiveEncodeResponse, error)
 	ContinueInteractiveEncode(context.Context, *ContinueInteractiveEncodeRequest) (*ContinueInteractiveEncodeResponse, error)
+	// Peer reply generation (plain LLM text, no steganography)
+	GeneratePeerReply(context.Context, *GeneratePeerReplyRequest) (*GeneratePeerReplyResponse, error)
 	// Deniability
 	AddDecoyKey(context.Context, *AddDecoyKeyRequest) (*AddDecoyKeyResponse, error)
 	mustEmbedUnimplementedStegoServiceServer()
@@ -217,6 +232,9 @@ func (UnimplementedStegoServiceServer) StartInteractiveEncode(context.Context, *
 }
 func (UnimplementedStegoServiceServer) ContinueInteractiveEncode(context.Context, *ContinueInteractiveEncodeRequest) (*ContinueInteractiveEncodeResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ContinueInteractiveEncode not implemented")
+}
+func (UnimplementedStegoServiceServer) GeneratePeerReply(context.Context, *GeneratePeerReplyRequest) (*GeneratePeerReplyResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GeneratePeerReply not implemented")
 }
 func (UnimplementedStegoServiceServer) AddDecoyKey(context.Context, *AddDecoyKeyRequest) (*AddDecoyKeyResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method AddDecoyKey not implemented")
@@ -404,6 +422,24 @@ func _StegoService_ContinueInteractiveEncode_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _StegoService_GeneratePeerReply_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GeneratePeerReplyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StegoServiceServer).GeneratePeerReply(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StegoService_GeneratePeerReply_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StegoServiceServer).GeneratePeerReply(ctx, req.(*GeneratePeerReplyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _StegoService_AddDecoyKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AddDecoyKeyRequest)
 	if err := dec(in); err != nil {
@@ -464,6 +500,10 @@ var StegoService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ContinueInteractiveEncode",
 			Handler:    _StegoService_ContinueInteractiveEncode_Handler,
+		},
+		{
+			MethodName: "GeneratePeerReply",
+			Handler:    _StegoService_GeneratePeerReply_Handler,
 		},
 		{
 			MethodName: "AddDecoyKey",

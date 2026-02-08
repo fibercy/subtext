@@ -517,6 +517,30 @@ func (s *StegoServer) DecodeMessage(ctx context.Context, req *pb.DecodeMessageRe
 	}, nil
 }
 
+// GeneratePeerReply generates a plain conversational reply to a received message.
+func (s *StegoServer) GeneratePeerReply(ctx context.Context, req *pb.GeneratePeerReplyRequest) (*pb.GeneratePeerReplyResponse, error) {
+	if req.Message == "" {
+		return nil, status.Error(codes.InvalidArgument, "message is required")
+	}
+	if s.encoder == nil {
+		return nil, status.Error(codes.FailedPrecondition, "LLM encoder not configured")
+	}
+
+	topic := req.TopicHint
+	if topic == "" {
+		topic = "casual chat"
+	}
+
+	reply, err := s.encoder.GenerateReply(ctx, req.Message, topic)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "reply generation failed: %v", err)
+	}
+
+	return &pb.GeneratePeerReplyResponse{
+		Reply: reply,
+	}, nil
+}
+
 // AddDecoyKey adds a decoy key for deniable encryption
 func (s *StegoServer) AddDecoyKey(ctx context.Context, req *pb.AddDecoyKeyRequest) (*pb.AddDecoyKeyResponse, error) {
 	if req.SessionId == "" {

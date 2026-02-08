@@ -21,6 +21,9 @@ service StegoService {
   rpc StartInteractiveEncode(StartInteractiveEncodeRequest) returns (StartInteractiveEncodeResponse);
   rpc ContinueInteractiveEncode(ContinueInteractiveEncodeRequest) returns (ContinueInteractiveEncodeResponse);
   
+  // Peer reply generation (plain LLM text, no steganography)
+  rpc GeneratePeerReply(GeneratePeerReplyRequest) returns (GeneratePeerReplyResponse);
+
   // Deniability
   rpc AddDecoyKey(AddDecoyKeyRequest) returns (AddDecoyKeyResponse);
 }
@@ -137,6 +140,17 @@ message ContinueInteractiveEncodeResponse {
   int32 segment_index = 3;        // 1-based segment number just produced
   int32 total_segments = 4;
   bool done = 5;                  // True when this was the final segment
+}
+
+// ==================== Peer Reply ====================
+
+message GeneratePeerReplyRequest {
+  string message = 1;      // The cover text just received
+  string topic_hint = 2;   // Topic for contextual reply
+}
+
+message GeneratePeerReplyResponse {
+  string reply = 1;        // Natural reply text (no hidden data)
 }
 
 // ==================== Deniability ====================
