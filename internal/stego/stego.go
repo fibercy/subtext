@@ -9,6 +9,7 @@ import (
 	"hash/fnv"
 	"os"
 	"strings"
+	"unicode"
 
 	"github.com/cy/stegochat/internal/llm"
 )
@@ -541,6 +542,9 @@ func isAllowedCoverToken(token string) bool {
 	if strings.ContainsAny(token, "\n\r\t[]{}<>") {
 		return false
 	}
+	if containsInvisible(token) {
+		return false
+	}
 
 	trimmed := strings.ToLower(strings.TrimSpace(token))
 	badToken := map[string]struct{}{
@@ -558,6 +562,41 @@ func isAllowedCoverToken(token string) bool {
 	}
 
 	return true
+}
+
+// containsInvisible returns true if s contains any zero-width or invisible
+// Unicode characters that cause decode mismatches.
+func containsInvisible(s string) bool {
+	for _, r := range s {
+		if isInvisibleRune(r) {
+			return true
+		}
+	}
+	return false
+}
+
+func isInvisibleRune(r rune) bool {
+	// Zero-width and formatting characters
+	switch r {
+	case '\u200B', // zero-width space
+		'\u200C', // zero-width non-joiner
+		'\u200D', // zero-width joiner
+		'\u200E', // left-to-right mark
+		'\u200F', // right-to-left mark
+		'\uFEFF', // BOM / zero-width no-break space
+		'\u2060', // word joiner
+		'\u2061', // function application
+		'\u2062', // invisible times
+		'\u2063', // invisible separator
+		'\u2064', // invisible plus
+		'\u00AD': // soft hyphen
+		return true
+	}
+	// Catch remaining Cf (format) category chars
+	if unicode.Is(unicode.Cf, r) {
+		return true
+	}
+	return false
 }
 
 func splitCoverSegments(coverText string) []string {
@@ -601,6 +640,9 @@ func isValidCoverSegment(text string) bool {
 		return false
 	}
 	if strings.ContainsAny(text, "[]{}<>") {
+		return false
+	}
+	if containsInvisible(text) {
 		return false
 	}
 
