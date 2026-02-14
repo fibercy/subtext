@@ -686,14 +686,15 @@ func (x *EncodeMessageResponse) GetMessageId() string {
 }
 
 type DecodeMessageRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
-	CoverText     string                 `protobuf:"bytes,2,opt,name=cover_text,json=coverText,proto3" json:"cover_text,omitempty"`
-	DecoyKey      []byte                 `protobuf:"bytes,3,opt,name=decoy_key,json=decoyKey,proto3" json:"decoy_key,omitempty"`          // Optional: if using deniable decryption
-	PeerReplies   []string               `protobuf:"bytes,4,rep,name=peer_replies,json=peerReplies,proto3" json:"peer_replies,omitempty"` // Optional: per-segment peer replies for interactive decode (segment2..N)
-	TopicHint     string                 `protobuf:"bytes,5,opt,name=topic_hint,json=topicHint,proto3" json:"topic_hint,omitempty"`       // Optional: must match encode topic for reliable decode
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	SessionId      string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	CoverText      string                 `protobuf:"bytes,2,opt,name=cover_text,json=coverText,proto3" json:"cover_text,omitempty"`
+	DecoyKey       []byte                 `protobuf:"bytes,3,opt,name=decoy_key,json=decoyKey,proto3" json:"decoy_key,omitempty"`                           // Optional: if using deniable decryption
+	PeerReplies    []string               `protobuf:"bytes,4,rep,name=peer_replies,json=peerReplies,proto3" json:"peer_replies,omitempty"`                  // Optional: per-segment peer replies for interactive decode (segment2..N)
+	TopicHint      string                 `protobuf:"bytes,5,opt,name=topic_hint,json=topicHint,proto3" json:"topic_hint,omitempty"`                        // Optional: must match encode topic for reliable decode
+	EncodeAttempts []int32                `protobuf:"varint,6,rep,packed,name=encode_attempts,json=encodeAttempts,proto3" json:"encode_attempts,omitempty"` // Optional: per-segment encoder attempt numbers (1-based)
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *DecodeMessageRequest) Reset() {
@@ -759,6 +760,13 @@ func (x *DecodeMessageRequest) GetTopicHint() string {
 		return x.TopicHint
 	}
 	return ""
+}
+
+func (x *DecodeMessageRequest) GetEncodeAttempts() []int32 {
+	if x != nil {
+		return x.EncodeAttempts
+	}
+	return nil
 }
 
 type DecodeMessageResponse struct {
@@ -887,7 +895,8 @@ type StartInteractiveEncodeResponse struct {
 	CoverText     string                 `protobuf:"bytes,2,opt,name=cover_text,json=coverText,proto3" json:"cover_text,omitempty"`
 	SegmentIndex  int32                  `protobuf:"varint,3,opt,name=segment_index,json=segmentIndex,proto3" json:"segment_index,omitempty"` // 1-based segment number just produced
 	TotalSegments int32                  `protobuf:"varint,4,opt,name=total_segments,json=totalSegments,proto3" json:"total_segments,omitempty"`
-	Done          bool                   `protobuf:"varint,5,opt,name=done,proto3" json:"done,omitempty"` // True when this was the final segment
+	Done          bool                   `protobuf:"varint,5,opt,name=done,proto3" json:"done,omitempty"`                                        // True when this was the final segment
+	EncodeAttempt int32                  `protobuf:"varint,6,opt,name=encode_attempt,json=encodeAttempt,proto3" json:"encode_attempt,omitempty"` // 1-based retry attempt used by encoder
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -957,6 +966,13 @@ func (x *StartInteractiveEncodeResponse) GetDone() bool {
 	return false
 }
 
+func (x *StartInteractiveEncodeResponse) GetEncodeAttempt() int32 {
+	if x != nil {
+		return x.EncodeAttempt
+	}
+	return 0
+}
+
 type ContinueInteractiveEncodeRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	FlowId        string                 `protobuf:"bytes,1,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty"`
@@ -1015,7 +1031,8 @@ type ContinueInteractiveEncodeResponse struct {
 	CoverText     string                 `protobuf:"bytes,2,opt,name=cover_text,json=coverText,proto3" json:"cover_text,omitempty"`
 	SegmentIndex  int32                  `protobuf:"varint,3,opt,name=segment_index,json=segmentIndex,proto3" json:"segment_index,omitempty"` // 1-based segment number just produced
 	TotalSegments int32                  `protobuf:"varint,4,opt,name=total_segments,json=totalSegments,proto3" json:"total_segments,omitempty"`
-	Done          bool                   `protobuf:"varint,5,opt,name=done,proto3" json:"done,omitempty"` // True when this was the final segment
+	Done          bool                   `protobuf:"varint,5,opt,name=done,proto3" json:"done,omitempty"`                                        // True when this was the final segment
+	EncodeAttempt int32                  `protobuf:"varint,6,opt,name=encode_attempt,json=encodeAttempt,proto3" json:"encode_attempt,omitempty"` // 1-based retry attempt used by encoder
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1083,6 +1100,13 @@ func (x *ContinueInteractiveEncodeResponse) GetDone() bool {
 		return x.Done
 	}
 	return false
+}
+
+func (x *ContinueInteractiveEncodeResponse) GetEncodeAttempt() int32 {
+	if x != nil {
+		return x.EncodeAttempt
+	}
+	return 0
 }
 
 type GeneratePeerReplyRequest struct {
@@ -1337,7 +1361,7 @@ const file_proto_stego_proto_rawDesc = "" +
 	"cover_text\x18\x01 \x01(\tR\tcoverText\x12!\n" +
 	"\fbits_encoded\x18\x02 \x01(\x05R\vbitsEncoded\x12\x1d\n" +
 	"\n" +
-	"message_id\x18\x03 \x01(\tR\tmessageId\"\xb3\x01\n" +
+	"message_id\x18\x03 \x01(\tR\tmessageId\"\xdc\x01\n" +
 	"\x14DecodeMessageRequest\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x1d\n" +
@@ -1346,7 +1370,8 @@ const file_proto_stego_proto_rawDesc = "" +
 	"\tdecoy_key\x18\x03 \x01(\fR\bdecoyKey\x12!\n" +
 	"\fpeer_replies\x18\x04 \x03(\tR\vpeerReplies\x12\x1d\n" +
 	"\n" +
-	"topic_hint\x18\x05 \x01(\tR\ttopicHint\"x\n" +
+	"topic_hint\x18\x05 \x01(\tR\ttopicHint\x12'\n" +
+	"\x0fencode_attempts\x18\x06 \x03(\x05R\x0eencodeAttempts\"x\n" +
 	"\x15DecodeMessageResponse\x12%\n" +
 	"\x0esecret_message\x18\x01 \x01(\tR\rsecretMessage\x12\x19\n" +
 	"\bis_decoy\x18\x02 \x01(\bR\aisDecoy\x12\x1d\n" +
@@ -1357,25 +1382,27 @@ const file_proto_stego_proto_rawDesc = "" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12%\n" +
 	"\x0esecret_message\x18\x02 \x01(\tR\rsecretMessage\x12\x1d\n" +
 	"\n" +
-	"topic_hint\x18\x03 \x01(\tR\ttopicHint\"\xb8\x01\n" +
+	"topic_hint\x18\x03 \x01(\tR\ttopicHint\"\xdf\x01\n" +
 	"\x1eStartInteractiveEncodeResponse\x12\x17\n" +
 	"\aflow_id\x18\x01 \x01(\tR\x06flowId\x12\x1d\n" +
 	"\n" +
 	"cover_text\x18\x02 \x01(\tR\tcoverText\x12#\n" +
 	"\rsegment_index\x18\x03 \x01(\x05R\fsegmentIndex\x12%\n" +
 	"\x0etotal_segments\x18\x04 \x01(\x05R\rtotalSegments\x12\x12\n" +
-	"\x04done\x18\x05 \x01(\bR\x04done\"Z\n" +
+	"\x04done\x18\x05 \x01(\bR\x04done\x12%\n" +
+	"\x0eencode_attempt\x18\x06 \x01(\x05R\rencodeAttempt\"Z\n" +
 	" ContinueInteractiveEncodeRequest\x12\x17\n" +
 	"\aflow_id\x18\x01 \x01(\tR\x06flowId\x12\x1d\n" +
 	"\n" +
-	"peer_reply\x18\x02 \x01(\tR\tpeerReply\"\xbb\x01\n" +
+	"peer_reply\x18\x02 \x01(\tR\tpeerReply\"\xe2\x01\n" +
 	"!ContinueInteractiveEncodeResponse\x12\x17\n" +
 	"\aflow_id\x18\x01 \x01(\tR\x06flowId\x12\x1d\n" +
 	"\n" +
 	"cover_text\x18\x02 \x01(\tR\tcoverText\x12#\n" +
 	"\rsegment_index\x18\x03 \x01(\x05R\fsegmentIndex\x12%\n" +
 	"\x0etotal_segments\x18\x04 \x01(\x05R\rtotalSegments\x12\x12\n" +
-	"\x04done\x18\x05 \x01(\bR\x04done\"S\n" +
+	"\x04done\x18\x05 \x01(\bR\x04done\x12%\n" +
+	"\x0eencode_attempt\x18\x06 \x01(\x05R\rencodeAttempt\"S\n" +
 	"\x18GeneratePeerReplyRequest\x12\x18\n" +
 	"\amessage\x18\x01 \x01(\tR\amessage\x12\x1d\n" +
 	"\n" +

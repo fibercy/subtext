@@ -107,6 +107,7 @@ message DecodeMessageRequest {
   bytes decoy_key = 3;            // Optional: if using deniable decryption
   repeated string peer_replies = 4; // Optional: per-segment peer replies for interactive decode (segment2..N)
   string topic_hint = 5;          // Optional: must match encode topic for reliable decode
+  repeated int32 encode_attempts = 6; // Optional: per-segment encoder attempt numbers (1-based)
 }
 
 message DecodeMessageResponse {
@@ -127,6 +128,7 @@ message StartInteractiveEncodeResponse {
   int32 segment_index = 3;        // 1-based segment number just produced
   int32 total_segments = 4;
   bool done = 5;                  // True when this was the final segment
+  int32 encode_attempt = 6;       // 1-based retry attempt used by encoder
 }
 
 message ContinueInteractiveEncodeRequest {
@@ -140,6 +142,7 @@ message ContinueInteractiveEncodeResponse {
   int32 segment_index = 3;        // 1-based segment number just produced
   int32 total_segments = 4;
   bool done = 5;                  // True when this was the final segment
+  int32 encode_attempt = 6;       // 1-based retry attempt used by encoder
 }
 
 // ==================== Peer Reply ====================

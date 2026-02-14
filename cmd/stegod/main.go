@@ -78,6 +78,11 @@ func main() {
 		} else if tmpl != nil {
 			log.Printf("Using chat template (system: %q)", tmpl.SystemMessage[:min(40, len(tmpl.SystemMessage))])
 		}
+		// Warm up model to stabilize logprobs (first call after load differs)
+		warmCtx, warmCancel := context.WithTimeout(context.Background(), 30*time.Second)
+		_, _ = llmClient.Generate(warmCtx, "hello", llm.GenerateOptions{NumPredict: 1}, false)
+		warmCancel()
+		log.Printf("Model warm-up complete")
 		serverOpts = append(serverOpts, server.WithLLMClient(llmClient))
 	}
 

@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/cy/stegochat/internal/stego"
 	pb "github.com/cy/stegochat/proto"
@@ -42,12 +43,12 @@ var convoStartCmd = &cobra.Command{
 
 		raw, _ := cmd.Flags().GetBool("raw")
 		if raw {
-			// Machine-parseable: flow_id<TAB>cover_text<TAB>done
+			// Machine-parseable: flow_id<TAB>cover_text<TAB>done<TAB>attempt
 			done := "0"
 			if resp.Done {
 				done = "1"
 			}
-			fmt.Printf("%s\t%s\t%s", resp.FlowId, resp.CoverText, done)
+			fmt.Printf("%s\t%s\t%s\t%d", resp.FlowId, resp.CoverText, done, resp.EncodeAttempt)
 			return
 		}
 
@@ -84,12 +85,12 @@ var convoNextCmd = &cobra.Command{
 
 		raw, _ := cmd.Flags().GetBool("raw")
 		if raw {
-			// Machine-parseable: flow_id<TAB>cover_text<TAB>done
+			// Machine-parseable: flow_id<TAB>cover_text<TAB>done<TAB>attempt
 			done := "0"
 			if resp.Done {
 				done = "1"
 			}
-			fmt.Printf("%s\t%s\t%s", resp.FlowId, resp.CoverText, done)
+			fmt.Printf("%s\t%s\t%s\t%d", resp.FlowId, resp.CoverText, done, resp.EncodeAttempt)
 			return
 		}
 
@@ -112,6 +113,7 @@ var convoDecodeCmd = &cobra.Command{
 		coverFile, _ := cmd.Flags().GetString("cover-file")
 		peerReplies, _ := cmd.Flags().GetStringArray("peer-reply")
 		topicHint, _ := cmd.Flags().GetString("topic")
+		attemptStrs, _ := cmd.Flags().GetStringArray("attempt")
 
 		var coverText string
 		switch {
@@ -127,14 +129,25 @@ var convoDecodeCmd = &cobra.Command{
 			exitError("missing input", fmt.Errorf("provide at least one --cover or --cover-file"))
 		}
 
+		// Convert attempt strings to int32 slice
+		var encodeAttempts []int32
+		for _, s := range attemptStrs {
+			a, err := strconv.Atoi(s)
+			if err != nil {
+				exitError("invalid attempt number", err)
+			}
+			encodeAttempts = append(encodeAttempts, int32(a))
+		}
+
 		ctx, cancel := getContext()
 		defer cancel()
 
 		resp, err := client.DecodeMessage(ctx, &pb.DecodeMessageRequest{
-			SessionId:   sessionID,
-			CoverText:   coverText,
-			PeerReplies: peerReplies,
-			TopicHint:   topicHint,
+			SessionId:      sessionID,
+			CoverText:      coverText,
+			PeerReplies:    peerReplies,
+			TopicHint:      topicHint,
+			EncodeAttempts: encodeAttempts,
 		})
 		if err != nil {
 			exitError("decoding failed", err)
@@ -157,4 +170,5 @@ func init() {
 	convoDecodeCmd.Flags().String("cover-file", "", "File containing full assembled cover text")
 	convoDecodeCmd.Flags().StringArray("peer-reply", nil, "Peer plaintext reply for each transition (repeat in order for segment2..N)")
 	convoDecodeCmd.Flags().StringP("topic", "t", "casual chat", "Topic hint used during encoding")
+	convoDecodeCmd.Flags().StringArray("attempt", nil, "Per-segment encoder attempt number (repeat for each segment, 1-based)")
 }

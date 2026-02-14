@@ -36,6 +36,7 @@ type interactiveEncodeFlow struct {
 	Topic     string
 	Chunks    [][]byte
 	NextIndex int
+	Attempts  []int // per-segment encoder attempt numbers (1-based)
 }
 
 // ServerOption configures the server
@@ -359,6 +360,7 @@ func (s *StegoServer) StartInteractiveEncode(ctx context.Context, req *pb.StartI
 		SegmentIndex:  next.SegmentIndex,
 		TotalSegments: next.TotalSegments,
 		Done:          next.Done,
+		EncodeAttempt: next.EncodeAttempt,
 	}, nil
 }
 
@@ -405,6 +407,7 @@ func (s *StegoServer) nextInteractiveSegment(ctx context.Context, flowID, peerRe
 		return nil, status.Error(codes.Aborted, "flow advanced concurrently; retry")
 	}
 	flow.NextIndex++
+	flow.Attempts = append(flow.Attempts, encoded.Attempt)
 	done := flow.NextIndex >= len(flow.Chunks)
 	if done {
 		delete(s.flows, flowID)
@@ -417,6 +420,7 @@ func (s *StegoServer) nextInteractiveSegment(ctx context.Context, flowID, peerRe
 		SegmentIndex:  int32(currentIndex + 1),
 		TotalSegments: int32(total),
 		Done:          done,
+		EncodeAttempt: int32(encoded.Attempt),
 	}, nil
 }
 
@@ -481,8 +485,17 @@ func (s *StegoServer) DecodeMessage(ctx context.Context, req *pb.DecodeMessageRe
 		topic = "weekend plans"
 	}
 
+	// Convert proto int32 attempts to []int
+	var attempts []int
+	if len(req.EncodeAttempts) > 0 {
+		attempts = make([]int, len(req.EncodeAttempts))
+		for i, a := range req.EncodeAttempts {
+			attempts[i] = int(a)
+		}
+	}
+
 	// Use LLM to extract bits from cover text
-	result, err := s.decoder.DecodeWithPeerReplies(ctx, req.CoverText, topic, req.PeerReplies)
+	result, err := s.decoder.DecodeWithPeerReplies(ctx, req.CoverText, topic, req.PeerReplies, attempts)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "decoding failed: %v", err)
 	}

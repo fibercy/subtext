@@ -16,18 +16,16 @@ import (
 
 const (
 	// BitsPerDecision is the number of bits encoded per token decision.
-	// Reduced from 3 to 2 for better reliability with ASCII-only token filtering.
+	// With token-hash encoding and ~10-15 filtered candidates, ~78% of
+	// positions encode 2 bits, the rest fall back to 1 → avg ~1.5 bits/token.
 	BitsPerDecision = 2
-	// NumCandidates is 2^BitsPerDecision
-	NumCandidates = 1 << BitsPerDecision
 	// MaxSecretLength is the maximum encrypted payload length per segment in bytes
 	MaxSecretLength = 256
 	// TargetSegmentPayloadLength is the target encrypted payload size per generated cover segment.
-	// Smaller segments reduce long-run model drift into meta/instructional text.
-	// Reduced to 8 bytes for better reliability with ASCII-only token filtering.
-	TargetSegmentPayloadLength = 8
+	// At ~1.5 bits/token avg: 4 payload + 2 length prefix = 6 bytes = 48 bits ≈ 27 tokens.
+	// Proven reliable: keeps each segment within the model's coherent generation range.
+	TargetSegmentPayloadLength = 4
 	// MaxSegmentEncodeAttempts is the max retries to regenerate a valid segment.
-	// Increased for multilingual models that may produce non-ASCII tokens.
 	MaxSegmentEncodeAttempts = 12
 )
 
@@ -49,6 +47,7 @@ type EncodeResult struct {
 	CoverText   string
 	BitsEncoded int
 	TokenCount  int
+	Attempt     int // 1-based retry attempt that succeeded (decoder needs this to match prompt variation)
 }
 
 // Encode encodes an encrypted payload into cover text
@@ -68,7 +67,7 @@ func (e *Encoder) Encode(ctx context.Context, encryptedPayload []byte, topic str
 		chunk := encryptedPayload[i:end]
 
 		segmentPrompt := buildSegmentPrompt(basePrompt, segments)
-		coverSegment, bitsEncoded, tokenCount, err := e.encodeSegment(ctx, segmentPrompt, chunk)
+		coverSegment, bitsEncoded, tokenCount, _, err := e.encodeSegment(ctx, segmentPrompt, chunk)
 		if err != nil {
 			return nil, fmt.Errorf("segment %d encoding failed: %w", len(segments)+1, err)
 		}
@@ -95,7 +94,7 @@ func (e *Encoder) EncodeInteractiveSegment(ctx context.Context, encryptedPayload
 	basePrompt := buildPrompt(topic)
 	prompt := buildSegmentPromptWithPeerReply(basePrompt, peerReply)
 
-	coverSegment, bitsEncoded, tokenCount, err := e.encodeSegment(ctx, prompt, encryptedPayload)
+	coverSegment, bitsEncoded, tokenCount, attempt, err := e.encodeSegment(ctx, prompt, encryptedPayload)
 	if err != nil {
 		return nil, err
 	}
@@ -104,12 +103,15 @@ func (e *Encoder) EncodeInteractiveSegment(ctx context.Context, encryptedPayload
 		CoverText:   coverSegment,
 		BitsEncoded: bitsEncoded,
 		TokenCount:  tokenCount,
+		Attempt:     attempt,
 	}, nil
 }
 
-func (e *Encoder) encodeSegment(ctx context.Context, prompt string, encryptedPayload []byte) (string, int, int, error) {
+// encodeSegment returns (coverText, bitsEncoded, tokenCount, attempt, error).
+// attempt is the 1-based retry number that succeeded (used by decoder to match prompt variation).
+func (e *Encoder) encodeSegment(ctx context.Context, prompt string, encryptedPayload []byte) (string, int, int, int, error) {
 	if len(encryptedPayload) > MaxSecretLength {
-		return "", 0, 0, fmt.Errorf("payload too large: %d bytes (max %d)", len(encryptedPayload), MaxSecretLength)
+		return "", 0, 0, 0, fmt.Errorf("payload too large: %d bytes (max %d)", len(encryptedPayload), MaxSecretLength)
 	}
 
 	// Add a 2-byte length prefix so each segment can be decoded independently.
@@ -118,35 +120,43 @@ func (e *Encoder) encodeSegment(ctx context.Context, prompt string, encryptedPay
 	copy(payloadWithLen[2:], encryptedPayload)
 
 	bits := bytesToBits(payloadWithLen)
+	// Pad to a multiple of BitsPerDecision so the encoder always uses the full
+	// bit width. Without this, the last token might encode fewer bits than the
+	// decoder extracts (the decoder can't know the total count), causing a
+	// bit-stream shift that corrupts the payload.
+	for len(bits)%BitsPerDecision != 0 {
+		bits = append(bits, false)
+	}
 	for attempt := 1; attempt <= MaxSegmentEncodeAttempts; attempt++ {
-		coverText, tokenCount, bitsEncoded, err := e.generateWithBits(ctx, prompt, bits, attempt)
+		attemptPrompt := prompt + promptVariation(attempt)
+		coverText, tokenCount, bitsEncoded, err := e.generateWithBits(ctx, attemptPrompt, bits)
 		if err != nil {
 			if attempt == MaxSegmentEncodeAttempts {
-				return "", 0, 0, fmt.Errorf("generation failed: %w", err)
+				return "", 0, 0, 0, fmt.Errorf("generation failed: %w", err)
 			}
 			continue
 		}
 		if bitsEncoded != len(bits) {
 			if attempt == MaxSegmentEncodeAttempts {
-				return "", 0, 0, fmt.Errorf("incomplete segment encoding: encoded %d of %d bits", bitsEncoded, len(bits))
+				return "", 0, 0, 0, fmt.Errorf("incomplete segment encoding: encoded %d of %d bits", bitsEncoded, len(bits))
 			}
 			continue
 		}
 		if !isValidCoverSegment(coverText) {
 			if attempt == MaxSegmentEncodeAttempts {
-				return "", 0, 0, fmt.Errorf("generated segment failed quality checks")
+				return "", 0, 0, 0, fmt.Errorf("generated segment failed quality checks")
 			}
 			continue
 		}
-		return coverText, len(bits), tokenCount, nil
+		return coverText, len(bits), tokenCount, attempt, nil
 	}
 
-	return "", 0, 0, fmt.Errorf("segment encoding failed after %d attempts", MaxSegmentEncodeAttempts)
+	return "", 0, 0, 0, fmt.Errorf("segment encoding failed after %d attempts", MaxSegmentEncodeAttempts)
 }
 
-// formatPrompt wraps instruction + generated assistant text using the model's
-// chat template (if available). When no template is set, it falls back to raw
-// concatenation which works for models like llama3.1.
+// formatPrompt builds the full prompt for stego encoding/decoding.
+// Uses the ChatML template when available so Qwen can distinguish the
+// instruction from the expected assistant output.
 func (e *Encoder) formatPrompt(instruction, assistantText string) string {
 	tmpl := e.llmClient.GetChatTemplate()
 	if tmpl != nil {
@@ -155,24 +165,51 @@ func (e *Encoder) formatPrompt(instruction, assistantText string) string {
 	return instruction + assistantText
 }
 
-// generateWithBits generates text while embedding bits through token selection from logprobs
-func (e *Encoder) generateWithBits(ctx context.Context, instruction string, bits []bool, attempt int) (string, int, int, error) {
+// eosMarkers are continuation tokens inserted when the model hits EOS mid-encoding.
+// Both encoder and decoder detect EOS at the same position (same prompt → same logprobs)
+// and agree to insert/skip this marker without encoding/extracting bits.
+// Multiple markers are rotated to prevent the model from getting stuck in an EOS loop.
+var eosMarkers = []string{", ", " and ", " - ", ". ", " but "}
+
+// promptVariation returns a small instruction suffix for retry attempts > 1.
+// Each variation changes the prompt hash → different seed → different logprobs →
+// genuinely different cover text. The decoder tries matching variations until one works.
+func promptVariation(attempt int) string {
+	if attempt <= 1 {
+		return ""
+	}
+	variations := []string{
+		"\nKeep it brief.",
+		"\nBe casual.",
+		"\nChat naturally.",
+		"\nKeep it simple.",
+		"\nSound friendly.",
+		"\nBe relaxed.",
+		"\nStay natural.",
+		"\nBe genuine.",
+		"\nKeep it real.",
+		"\nSound human.",
+		"\nBe authentic.",
+	}
+	return variations[(attempt-2)%len(variations)]
+}
+
+// generateWithBits generates text while embedding bits through token selection from logprobs.
+func (e *Encoder) generateWithBits(ctx context.Context, instruction string, bits []bool) (string, int, int, error) {
 	var result strings.Builder
 	bitIndex := 0
 	tokenCount := 0
-	emptyResponseCount := 0 // Track consecutive empty responses
+	eosRecoveries := 0
 
 	for bitIndex < len(bits) {
 		bitsToEncode := min(BitsPerDecision, len(bits)-bitIndex)
 		currentPrompt := e.formatPrompt(instruction, result.String())
 
-		// Include attempt number in seed for variation across retries
-		seed := promptToSeed(currentPrompt) + attempt*1000 + tokenCount
 		resp, err := e.llmClient.Generate(ctx, currentPrompt, llm.GenerateOptions{
-			Temperature: 0.9, // Increased temperature for more diversity
-			TopK:        50,  // Increased TopK for more token candidates
+			Temperature: 0.8,
+			TopK:        40,
 			NumPredict:  1,
-			Seed:        seed,
+			Seed:        promptToSeed(currentPrompt),
 		}, true)
 		if err != nil {
 			return "", 0, 0, fmt.Errorf("generation failed: %w", err)
@@ -183,43 +220,68 @@ func (e *Encoder) generateWithBits(ctx context.Context, instruction string, bits
 			return "", 0, 0, fmt.Errorf("failed to parse logprobs: %w", err)
 		}
 
-		if len(logprobItems) == 0 || len(logprobItems[0].TopLogprobs) == 0 {
-			if resp.Response == "" {
-				emptyResponseCount++
-				// Allow a few empty responses before giving up
-				if emptyResponseCount > 3 {
-					break
-				}
-				continue
+		// Check for EOS: no usable logprobs means model wants to stop
+		noLogprobs := len(logprobItems) == 0 || len(logprobItems[0].TopLogprobs) == 0
+
+		var candidates []llm.LogprobToken
+		if !noLogprobs {
+			candidates = filterCoverCandidates(logprobItems[0].TopLogprobs)
+			if result.Len() > 0 {
+				candidates = filterSpaceAware(candidates, result.String()[result.Len()-1])
 			}
-			emptyResponseCount = 0
-			result.WriteString(resp.Response)
+		}
+
+		// EOS recovery: model hit end-of-sequence or all candidates filtered out.
+		// Insert a rotating continuation marker to restart generation flow.
+		// The decoder detects EOS at the same position and expects the same marker.
+		if noLogprobs || len(candidates) == 0 {
+			if eosRecoveries >= len(eosMarkers) {
+				break // give up after exhausting all markers
+			}
+			result.WriteString(eosMarkers[eosRecoveries])
+			eosRecoveries++
 			tokenCount++
 			continue
 		}
-		emptyResponseCount = 0
 
-		candidates := filterCoverCandidates(logprobItems[0].TopLogprobs)
-		numCandidates := len(candidates)
-
-		if numCandidates < (1 << bitsToEncode) {
-			for bitsToEncode > 0 && numCandidates < (1<<bitsToEncode) {
-				bitsToEncode--
-			}
-			if bitsToEncode == 0 {
-				result.WriteString(candidates[0].Token)
-				tokenCount++
-				continue
+		// Use token-hash encoding: assign bits based on hash of token content,
+		// not candidate index. This is immune to GPU-caused candidate reordering.
+		// IMPORTANT: Use the same bit-width determination as the decoder
+		// (all hash slots must be covered) to keep bit streams in sync.
+		numSlots := 1 << bitsToEncode
+		hashSet := make(map[int]bool)
+		for _, c := range candidates {
+			hashSet[tokenHashValue(c.Token, numSlots)] = true
+		}
+		for bitsToEncode > 0 && len(hashSet) < (1<<bitsToEncode) {
+			bitsToEncode--
+			numSlots = 1 << bitsToEncode
+			hashSet = make(map[int]bool)
+			for _, c := range candidates {
+				hashSet[tokenHashValue(c.Token, numSlots)] = true
 			}
 		}
 
-		bitValue := bitsToInt(bits[bitIndex : bitIndex+bitsToEncode])
-		selectedIndex := bitValue % (1 << bitsToEncode)
-		if selectedIndex >= numCandidates {
-			selectedIndex = 0
+		if bitsToEncode == 0 {
+			// No bits can be encoded at this position — write top candidate
+			result.WriteString(candidates[0].Token)
+			tokenCount++
+			continue
 		}
 
-		selectedToken := candidates[selectedIndex].Token
+		targetValue := bitsToInt(bits[bitIndex:bitIndex+bitsToEncode]) % numSlots
+		selectedToken := ""
+		for _, c := range candidates {
+			if tokenHashValue(c.Token, numSlots) == targetValue {
+				selectedToken = c.Token
+				break
+			}
+		}
+		if selectedToken == "" {
+			result.WriteString(candidates[0].Token)
+			tokenCount++
+			continue
+		}
 		result.WriteString(selectedToken)
 		tokenCount++
 		bitIndex += bitsToEncode
@@ -227,6 +289,42 @@ func (e *Encoder) generateWithBits(ctx context.Context, instruction string, bits
 		if tokenCount > 500 {
 			break
 		}
+	}
+
+	// Tail generation: continue generating tokens (without encoding bits) until
+	// the sentence ends naturally. This avoids mid-sentence cutoffs like
+	// "hope you manage to squeeze out a" and produces complete sentences.
+	if bitIndex >= len(bits) {
+		tailText := result.String()
+		for i := 0; i < 20; i++ {
+			trimmed := strings.TrimSpace(tailText)
+			if len(trimmed) > 0 {
+				last := trimmed[len(trimmed)-1]
+				if last == '.' || last == '!' || last == '?' {
+					break
+				}
+			}
+			currentPrompt := e.formatPrompt(instruction, tailText)
+			resp, err := e.llmClient.Generate(ctx, currentPrompt, llm.GenerateOptions{
+				Temperature: 0.8,
+				TopK:        40,
+				NumPredict:  1,
+				Seed:        promptToSeed(currentPrompt),
+			}, false)
+			if err != nil || resp.Response == "" {
+				// Model hit EOS during tail — force a sentence ending
+				tailText += "."
+				break
+			}
+			if !isASCIIOnly(resp.Response) || strings.ContainsAny(resp.Response, "\n\r\t") {
+				tailText += "."
+				break
+			}
+			tailText += resp.Response
+			tokenCount++
+		}
+		result.Reset()
+		result.WriteString(tailText)
 	}
 
 	return strings.TrimSpace(result.String()), tokenCount, bitIndex, nil
@@ -240,7 +338,7 @@ func (e *Encoder) GenerateReply(ctx context.Context, receivedMessage, topic stri
 		topic = "casual chat"
 	}
 	instruction := fmt.Sprintf(`Your friend texted you about %s: "%s"
-Reply in 1 short sentence. Casual, lowercase, no quotes, no explanations.`, topic, receivedMessage)
+Reply in 1 short sentence in English. Casual, lowercase, no quotes, no explanations. English only.`, topic, receivedMessage)
 	prompt := e.formatPrompt(instruction, "")
 
 	resp, err := e.llmClient.Generate(ctx, prompt, llm.GenerateOptions{
@@ -262,6 +360,10 @@ Reply in 1 short sentence. Casual, lowercase, no quotes, no explanations.`, topi
 	if idx := strings.IndexAny(reply, "\n\r"); idx >= 0 {
 		reply = strings.TrimSpace(reply[:idx])
 	}
+	// Strip non-ASCII characters (Qwen may switch to Chinese)
+	reply = stripNonASCII(reply)
+	// Strip any ChatML template markers that leak through
+	reply = stripChatMLMarkers(reply)
 	return reply, nil
 }
 
@@ -284,12 +386,13 @@ type DecodeResult struct {
 
 // Decode extracts the encrypted payload from cover text
 func (d *Decoder) Decode(ctx context.Context, coverText string, topic string) (*DecodeResult, error) {
-	return d.DecodeWithPeerReplies(ctx, coverText, topic, nil)
+	return d.DecodeWithPeerReplies(ctx, coverText, topic, nil, nil)
 }
 
 // DecodeWithPeerReplies decodes cover segments with optional per-segment peer replies.
 // peerReplies maps to segments 2..N (i.e. peerReplies[0] is for segment 2).
-func (d *Decoder) DecodeWithPeerReplies(ctx context.Context, coverText string, topic string, peerReplies []string) (*DecodeResult, error) {
+// attempts contains the 1-based retry attempt used per segment (nil = all attempt 1).
+func (d *Decoder) DecodeWithPeerReplies(ctx context.Context, coverText string, topic string, peerReplies []string, attempts []int) (*DecodeResult, error) {
 	segments := splitCoverSegments(coverText)
 	if len(segments) == 0 {
 		return &DecodeResult{Valid: false}, nil
@@ -304,7 +407,11 @@ func (d *Decoder) DecodeWithPeerReplies(ctx context.Context, coverText string, t
 		if i > 0 && i-1 < len(peerReplies) && strings.TrimSpace(peerReplies[i-1]) != "" {
 			segmentPrompt = buildSegmentPromptWithPeerReply(basePrompt, peerReplies[i-1])
 		}
-		decoded, err := d.decodeSegment(ctx, segment, segmentPrompt)
+		attempt := 1
+		if i < len(attempts) && attempts[i] > 0 {
+			attempt = attempts[i]
+		}
+		decoded, err := d.decodeSegment(ctx, segment, segmentPrompt, attempt)
 		if err != nil {
 			return nil, fmt.Errorf("segment %d decode failed: %w", i+1, err)
 		}
@@ -323,8 +430,8 @@ func (d *Decoder) DecodeWithPeerReplies(ctx context.Context, coverText string, t
 	}, nil
 }
 
-// formatPromptDecode wraps instruction + generated assistant text using the model's
-// chat template (if available) for decoding.
+// formatPrompt builds the full prompt for stego decoding.
+// Uses the ChatML template to match the encoder behavior.
 func (d *Decoder) formatPrompt(instruction, assistantText string) string {
 	tmpl := d.llmClient.GetChatTemplate()
 	if tmpl != nil {
@@ -333,7 +440,8 @@ func (d *Decoder) formatPrompt(instruction, assistantText string) string {
 	return instruction + assistantText
 }
 
-func (d *Decoder) decodeSegment(ctx context.Context, coverText string, instruction string) (*DecodeResult, error) {
+func (d *Decoder) decodeSegment(ctx context.Context, coverText string, instruction string, attempt int) (*DecodeResult, error) {
+	instruction = instruction + promptVariation(attempt)
 	// Extract bits by matching tokens against logprobs at each position
 	var extractedBits []bool
 	var assistantText strings.Builder // accumulated matched tokens
@@ -342,8 +450,18 @@ func (d *Decoder) decodeSegment(ctx context.Context, coverText string, instructi
 	// allowTrimmed is true only for the first token, where TrimSpace during
 	// encoding may have removed a leading space from the cover text.
 	allowTrimmed := true
+	// expectedTotalBits is set once the 2-byte length prefix is decoded.
+	// It lets us limit extraction to exactly the number of bits the encoder
+	// produced, preventing over-extraction at the last token.
+	expectedTotalBits := 0
+	eosRecoveries := 0
 
 	for len(remainingText) > 0 {
+		// Check if we've extracted enough bits
+		if expectedTotalBits > 0 && len(extractedBits) >= expectedTotalBits {
+			break
+		}
+
 		currentPrompt := d.formatPrompt(instruction, assistantText.String())
 
 		// Generate logprobs for current position
@@ -362,32 +480,69 @@ func (d *Decoder) decodeSegment(ctx context.Context, coverText string, instructi
 			return nil, fmt.Errorf("failed to parse logprobs: %w", err)
 		}
 
-		if len(logprobItems) == 0 || len(logprobItems[0].TopLogprobs) == 0 {
-			// Cannot decode without logprobs
+		// Check for EOS: same condition as encoder
+		noLogprobs := len(logprobItems) == 0 || len(logprobItems[0].TopLogprobs) == 0
+
+		var candidates []llm.LogprobToken
+		if !noLogprobs {
+			candidates = filterCoverCandidates(logprobItems[0].TopLogprobs)
+			if assistantText.Len() > 0 {
+				candidates = filterSpaceAware(candidates, assistantText.String()[assistantText.Len()-1])
+			}
+		}
+
+		// EOS recovery: encoder inserted a rotating marker here, consume it
+		if noLogprobs || len(candidates) == 0 {
+			if eosRecoveries < len(eosMarkers) {
+				marker := eosMarkers[eosRecoveries]
+				if strings.HasPrefix(remainingText, marker) {
+					remainingText = remainingText[len(marker):]
+					assistantText.WriteString(marker)
+					eosRecoveries++
+					tokenCount++
+					continue
+				}
+			}
+			// No marker found — can't continue
 			break
 		}
 
-		candidates := filterCoverCandidates(logprobItems[0].TopLogprobs)
-		numCandidates := len(candidates)
+		// Token-hash decoding: match token in cover text against candidates,
+		// then compute hash to extract bits (immune to candidate reordering).
 
-		// Determine how many bits were encoded based on candidates
-		bitsToExtract := BitsPerDecision
-		for bitsToExtract > 0 && numCandidates < (1<<bitsToExtract) {
-			bitsToExtract--
-		}
-
-		// Find which candidate token matches the start of remainingText.
-		// With prefix-free candidates, the first match is unambiguous.
-		matchIndex := -1
-		matchedToken := ""
-		actualConsumed := ""
-		for i, cand := range candidates {
-			if i >= (1 << bitsToExtract) {
+		// Determine max bits for this position: use remaining count if known
+		maxBitsThisToken := BitsPerDecision
+		if expectedTotalBits > 0 {
+			remaining := expectedTotalBits - len(extractedBits)
+			if remaining <= 0 {
 				break
 			}
+			maxBitsThisToken = min(BitsPerDecision, remaining)
+		}
+
+		// Determine how many bit-slots exist for these candidates
+		numSlots := 1 << maxBitsThisToken
+		bitsToExtract := maxBitsThisToken
+		// Check if enough distinct hash values exist among candidates
+		hashSet := make(map[int]bool)
+		for _, c := range candidates {
+			hashSet[tokenHashValue(c.Token, numSlots)] = true
+		}
+		for bitsToExtract > 0 && len(hashSet) < (1<<bitsToExtract) {
+			bitsToExtract--
+			numSlots = 1 << bitsToExtract
+			hashSet = make(map[int]bool)
+			for _, c := range candidates {
+				hashSet[tokenHashValue(c.Token, numSlots)] = true
+			}
+		}
+
+		// Find which candidate token matches the start of remainingText
+		matchedToken := ""
+		actualConsumed := ""
+		for _, cand := range candidates {
 			token := cand.Token
 			if strings.HasPrefix(remainingText, token) {
-				matchIndex = i
 				matchedToken = token
 				actualConsumed = token
 				break
@@ -396,7 +551,6 @@ func (d *Decoder) decodeSegment(ctx context.Context, coverText string, instructi
 			if allowTrimmed {
 				trimmedToken := strings.TrimLeft(token, " ")
 				if trimmedToken != token && trimmedToken != "" && strings.HasPrefix(remainingText, trimmedToken) {
-					matchIndex = i
 					matchedToken = token
 					actualConsumed = trimmedToken
 					break
@@ -404,25 +558,18 @@ func (d *Decoder) decodeSegment(ctx context.Context, coverText string, instructi
 			}
 		}
 
-		if matchIndex < 0 {
-			// No match in encoding range — try any candidate to advance
-			for _, cand := range candidates {
-				if strings.HasPrefix(remainingText, cand.Token) {
-					matchedToken = cand.Token
-					actualConsumed = cand.Token
-					break
-				}
+		if matchedToken == "" {
+			// Skip one character and try again
+			if len(remainingText) > 0 {
+				remainingText = remainingText[1:]
+				continue
 			}
-			if actualConsumed == "" {
-				// Skip one character and try again
-				if len(remainingText) > 0 {
-					remainingText = remainingText[1:]
-					continue
-				}
-				break
-			}
-		} else if bitsToExtract > 0 {
-			bits := intToBits(matchIndex, bitsToExtract)
+			break
+		}
+
+		if bitsToExtract > 0 {
+			hashVal := tokenHashValue(matchedToken, 1<<bitsToExtract)
+			bits := intToBits(hashVal, bitsToExtract)
 			extractedBits = append(extractedBits, bits...)
 		}
 
@@ -435,6 +582,15 @@ func (d *Decoder) decodeSegment(ctx context.Context, coverText string, instructi
 			assistantText.WriteString(matchedToken) // Use original token for prompt
 		}
 		tokenCount++
+
+		// Once we have the 2-byte length prefix, compute expected total bits
+		if expectedTotalBits == 0 && len(extractedBits) >= 16 {
+			prefix := bitsToBytes(extractedBits[:16])
+			pLen := int(binary.BigEndian.Uint16(prefix))
+			if pLen > 0 && pLen <= MaxSecretLength {
+				expectedTotalBits = (2 + pLen) * 8
+			}
+		}
 
 		// Safety limits
 		if tokenCount > 500 || len(extractedBits) > (MaxSecretLength+2)*8+100 {
@@ -544,6 +700,39 @@ func filterCoverCandidates(candidates []llm.LogprobToken) []llm.LogprobToken {
 	return makePrefixFree(filtered)
 }
 
+// filterSpaceAware enforces natural spacing between words. When the last
+// character of the generated text is a letter or digit, only keep candidates
+// that start with a space or punctuation (to avoid concatenated words like
+// "supposedtobe12"). Both encoder and decoder call this identically so they
+// agree on the candidate set.
+func filterSpaceAware(candidates []llm.LogprobToken, lastChar byte) []llm.LogprobToken {
+	if !isLetterOrDigit(lastChar) {
+		return candidates
+	}
+	filtered := make([]llm.LogprobToken, 0, len(candidates))
+	for _, c := range candidates {
+		if len(c.Token) > 0 && (c.Token[0] == ' ' || isPunctuation(c.Token[0])) {
+			filtered = append(filtered, c)
+		}
+	}
+	if len(filtered) == 0 {
+		return candidates // fallback: don't starve encoding
+	}
+	return filtered
+}
+
+func isLetterOrDigit(c byte) bool {
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
+}
+
+func isPunctuation(c byte) bool {
+	switch c {
+	case '.', ',', '!', '?', ';', ':', '\'', '"', ')', '-':
+		return true
+	}
+	return false
+}
+
 // makePrefixFree removes candidates whose token is a prefix of (or has a prefix in)
 // an already-accepted candidate. This ensures unambiguous token matching during decode.
 // Candidates are processed in logprob order (most probable first) so higher-probability
@@ -572,7 +761,7 @@ func isAllowedCoverToken(token string) bool {
 	if token == "" {
 		return false
 	}
-	if strings.ContainsAny(token, "\n\r\t[]{}<>") {
+	if strings.ContainsAny(token, "\n\r\t[]{}<>_") {
 		return false
 	}
 	if containsInvisible(token) {
@@ -636,6 +825,26 @@ func isInvisibleRune(r rune) bool {
 	return false
 }
 
+// stripNonASCII removes non-ASCII characters from a string.
+// Used to clean up GenerateReply output when Qwen switches to Chinese.
+func stripNonASCII(s string) string {
+	var b strings.Builder
+	for _, r := range s {
+		if r <= 127 {
+			b.WriteRune(r)
+		}
+	}
+	return strings.TrimSpace(b.String())
+}
+
+// stripChatMLMarkers removes ChatML template tokens that Qwen may leak into output.
+func stripChatMLMarkers(s string) string {
+	s = strings.ReplaceAll(s, "<|im_start|>", "")
+	s = strings.ReplaceAll(s, "<|im_end|>", "")
+	s = strings.ReplaceAll(s, "<|endoftext|>", "")
+	return strings.TrimSpace(s)
+}
+
 // isASCIIOnly returns true if the string contains only ASCII characters.
 // Used to filter out Chinese, emojis, and other non-ASCII tokens from multilingual models.
 func isASCIIOnly(s string) bool {
@@ -687,7 +896,7 @@ func isValidCoverSegment(text string) bool {
 	if strings.Contains(text, "\n") || strings.Contains(text, "\r") {
 		return false
 	}
-	if strings.ContainsAny(text, "[]{}<>") {
+	if strings.ContainsAny(text, "[]{}<>_") {
 		return false
 	}
 	if containsInvisible(text) {
@@ -766,6 +975,15 @@ func getSeed(prompt string, variant int) int {
 }
 
 // promptToSeed generates a deterministic seed from a prompt for reproducible LLM output
+// tokenHashValue maps a token string to a deterministic bit value in [0, numSlots).
+// This is used instead of candidate index to encode/decode bits, making the system
+// immune to GPU-caused candidate reordering between encode and decode.
+func tokenHashValue(token string, numSlots int) int {
+	h := fnv.New32a()
+	h.Write([]byte(token))
+	return int(h.Sum32()) % numSlots
+}
+
 func promptToSeed(prompt string) int {
 	h := fnv.New32a()
 	h.Write([]byte(prompt))

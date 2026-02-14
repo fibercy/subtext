@@ -39,11 +39,12 @@ echo "Session $SID ready"
 # Interactive encode
 echo -e "\n${GREEN}[3] Encoding: '$SECRET' (topic: $TOPIC)${NC}"
 
-# convo start --raw outputs: flow_id\tcover_text\tdone
+# convo start --raw outputs: flow_id\tcover_text\tdone\tattempt
 RAW=$($STEGO convo start $SID "$SECRET" --topic "$TOPIC" --raw)
 FLOW=$(printf '%s' "$RAW" | cut -f1)
 COVER=$(printf '%s' "$RAW" | cut -f2)
 DONE=$(printf '%s' "$RAW" | cut -f3)
+ATTEMPT=$(printf '%s' "$RAW" | cut -f4)
 
 echo -e "\n${BLUE}--- Conversation ---${NC}"
 echo -e "${CYAN}Alice:${NC} $COVER"
@@ -52,8 +53,8 @@ echo -e "${CYAN}Alice:${NC} $COVER"
 printf '%s' "$COVER" > "$TMP/seg1.txt"
 N=1
 
-# Collect decode args
-DECODE_ARGS=("--cover-file" "$TMP/all.txt" "--topic" "$TOPIC")
+# Collect decode args and per-segment attempts
+DECODE_ARGS=("--cover-file" "$TMP/all.txt" "--topic" "$TOPIC" "--attempt" "$ATTEMPT")
 
 while [ "$DONE" = "0" ]; do
     # Peer reply
@@ -66,9 +67,12 @@ while [ "$DONE" = "0" ]; do
     RAW=$($STEGO convo next "$FLOW" "$REPLY" --raw)
     COVER=$(printf '%s' "$RAW" | cut -f2)
     DONE=$(printf '%s' "$RAW" | cut -f3)
+    ATTEMPT=$(printf '%s' "$RAW" | cut -f4)
     N=$((N + 1))
     printf '%s' "$COVER" > "$TMP/seg${N}.txt"
     echo -e "${CYAN}Alice:${NC} $COVER"
+    DECODE_ARGS[${#DECODE_ARGS[@]}]="--attempt"
+    DECODE_ARGS[${#DECODE_ARGS[@]}]="$ATTEMPT"
 done
 
 echo -e "${BLUE}--- End ($N segments) ---${NC}"
