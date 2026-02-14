@@ -686,12 +686,15 @@ func (x *EncodeMessageResponse) GetMessageId() string {
 }
 
 type DecodeMessageRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
-	CoverText     string                 `protobuf:"bytes,2,opt,name=cover_text,json=coverText,proto3" json:"cover_text,omitempty"`
-	DecoyKey      []byte                 `protobuf:"bytes,3,opt,name=decoy_key,json=decoyKey,proto3" json:"decoy_key,omitempty"` // Optional: if using deniable decryption
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	SessionId      string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	CoverText      string                 `protobuf:"bytes,2,opt,name=cover_text,json=coverText,proto3" json:"cover_text,omitempty"`
+	DecoyKey       []byte                 `protobuf:"bytes,3,opt,name=decoy_key,json=decoyKey,proto3" json:"decoy_key,omitempty"`                           // Optional: if using deniable decryption
+	PeerReplies    []string               `protobuf:"bytes,4,rep,name=peer_replies,json=peerReplies,proto3" json:"peer_replies,omitempty"`                  // Optional: per-segment peer replies for interactive decode (segment2..N)
+	TopicHint      string                 `protobuf:"bytes,5,opt,name=topic_hint,json=topicHint,proto3" json:"topic_hint,omitempty"`                        // Optional: must match encode topic for reliable decode
+	EncodeAttempts []int32                `protobuf:"varint,6,rep,packed,name=encode_attempts,json=encodeAttempts,proto3" json:"encode_attempts,omitempty"` // Optional: per-segment encoder attempt numbers (1-based)
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *DecodeMessageRequest) Reset() {
@@ -741,6 +744,27 @@ func (x *DecodeMessageRequest) GetCoverText() string {
 func (x *DecodeMessageRequest) GetDecoyKey() []byte {
 	if x != nil {
 		return x.DecoyKey
+	}
+	return nil
+}
+
+func (x *DecodeMessageRequest) GetPeerReplies() []string {
+	if x != nil {
+		return x.PeerReplies
+	}
+	return nil
+}
+
+func (x *DecodeMessageRequest) GetTopicHint() string {
+	if x != nil {
+		return x.TopicHint
+	}
+	return ""
+}
+
+func (x *DecodeMessageRequest) GetEncodeAttempts() []int32 {
+	if x != nil {
+		return x.EncodeAttempts
 	}
 	return nil
 }
@@ -805,6 +829,382 @@ func (x *DecodeMessageResponse) GetMessageId() string {
 	return ""
 }
 
+type StartInteractiveEncodeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	SecretMessage string                 `protobuf:"bytes,2,opt,name=secret_message,json=secretMessage,proto3" json:"secret_message,omitempty"`
+	TopicHint     string                 `protobuf:"bytes,3,opt,name=topic_hint,json=topicHint,proto3" json:"topic_hint,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StartInteractiveEncodeRequest) Reset() {
+	*x = StartInteractiveEncodeRequest{}
+	mi := &file_proto_stego_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StartInteractiveEncodeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StartInteractiveEncodeRequest) ProtoMessage() {}
+
+func (x *StartInteractiveEncodeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_stego_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StartInteractiveEncodeRequest.ProtoReflect.Descriptor instead.
+func (*StartInteractiveEncodeRequest) Descriptor() ([]byte, []int) {
+	return file_proto_stego_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *StartInteractiveEncodeRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *StartInteractiveEncodeRequest) GetSecretMessage() string {
+	if x != nil {
+		return x.SecretMessage
+	}
+	return ""
+}
+
+func (x *StartInteractiveEncodeRequest) GetTopicHint() string {
+	if x != nil {
+		return x.TopicHint
+	}
+	return ""
+}
+
+type StartInteractiveEncodeResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FlowId        string                 `protobuf:"bytes,1,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty"`
+	CoverText     string                 `protobuf:"bytes,2,opt,name=cover_text,json=coverText,proto3" json:"cover_text,omitempty"`
+	SegmentIndex  int32                  `protobuf:"varint,3,opt,name=segment_index,json=segmentIndex,proto3" json:"segment_index,omitempty"` // 1-based segment number just produced
+	TotalSegments int32                  `protobuf:"varint,4,opt,name=total_segments,json=totalSegments,proto3" json:"total_segments,omitempty"`
+	Done          bool                   `protobuf:"varint,5,opt,name=done,proto3" json:"done,omitempty"`                                        // True when this was the final segment
+	EncodeAttempt int32                  `protobuf:"varint,6,opt,name=encode_attempt,json=encodeAttempt,proto3" json:"encode_attempt,omitempty"` // 1-based retry attempt used by encoder
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StartInteractiveEncodeResponse) Reset() {
+	*x = StartInteractiveEncodeResponse{}
+	mi := &file_proto_stego_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StartInteractiveEncodeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StartInteractiveEncodeResponse) ProtoMessage() {}
+
+func (x *StartInteractiveEncodeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_stego_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StartInteractiveEncodeResponse.ProtoReflect.Descriptor instead.
+func (*StartInteractiveEncodeResponse) Descriptor() ([]byte, []int) {
+	return file_proto_stego_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *StartInteractiveEncodeResponse) GetFlowId() string {
+	if x != nil {
+		return x.FlowId
+	}
+	return ""
+}
+
+func (x *StartInteractiveEncodeResponse) GetCoverText() string {
+	if x != nil {
+		return x.CoverText
+	}
+	return ""
+}
+
+func (x *StartInteractiveEncodeResponse) GetSegmentIndex() int32 {
+	if x != nil {
+		return x.SegmentIndex
+	}
+	return 0
+}
+
+func (x *StartInteractiveEncodeResponse) GetTotalSegments() int32 {
+	if x != nil {
+		return x.TotalSegments
+	}
+	return 0
+}
+
+func (x *StartInteractiveEncodeResponse) GetDone() bool {
+	if x != nil {
+		return x.Done
+	}
+	return false
+}
+
+func (x *StartInteractiveEncodeResponse) GetEncodeAttempt() int32 {
+	if x != nil {
+		return x.EncodeAttempt
+	}
+	return 0
+}
+
+type ContinueInteractiveEncodeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FlowId        string                 `protobuf:"bytes,1,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty"`
+	PeerReply     string                 `protobuf:"bytes,2,opt,name=peer_reply,json=peerReply,proto3" json:"peer_reply,omitempty"` // Plaintext reply from peer, used as context for next segment
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ContinueInteractiveEncodeRequest) Reset() {
+	*x = ContinueInteractiveEncodeRequest{}
+	mi := &file_proto_stego_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ContinueInteractiveEncodeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ContinueInteractiveEncodeRequest) ProtoMessage() {}
+
+func (x *ContinueInteractiveEncodeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_stego_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ContinueInteractiveEncodeRequest.ProtoReflect.Descriptor instead.
+func (*ContinueInteractiveEncodeRequest) Descriptor() ([]byte, []int) {
+	return file_proto_stego_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *ContinueInteractiveEncodeRequest) GetFlowId() string {
+	if x != nil {
+		return x.FlowId
+	}
+	return ""
+}
+
+func (x *ContinueInteractiveEncodeRequest) GetPeerReply() string {
+	if x != nil {
+		return x.PeerReply
+	}
+	return ""
+}
+
+type ContinueInteractiveEncodeResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FlowId        string                 `protobuf:"bytes,1,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty"`
+	CoverText     string                 `protobuf:"bytes,2,opt,name=cover_text,json=coverText,proto3" json:"cover_text,omitempty"`
+	SegmentIndex  int32                  `protobuf:"varint,3,opt,name=segment_index,json=segmentIndex,proto3" json:"segment_index,omitempty"` // 1-based segment number just produced
+	TotalSegments int32                  `protobuf:"varint,4,opt,name=total_segments,json=totalSegments,proto3" json:"total_segments,omitempty"`
+	Done          bool                   `protobuf:"varint,5,opt,name=done,proto3" json:"done,omitempty"`                                        // True when this was the final segment
+	EncodeAttempt int32                  `protobuf:"varint,6,opt,name=encode_attempt,json=encodeAttempt,proto3" json:"encode_attempt,omitempty"` // 1-based retry attempt used by encoder
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ContinueInteractiveEncodeResponse) Reset() {
+	*x = ContinueInteractiveEncodeResponse{}
+	mi := &file_proto_stego_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ContinueInteractiveEncodeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ContinueInteractiveEncodeResponse) ProtoMessage() {}
+
+func (x *ContinueInteractiveEncodeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_stego_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ContinueInteractiveEncodeResponse.ProtoReflect.Descriptor instead.
+func (*ContinueInteractiveEncodeResponse) Descriptor() ([]byte, []int) {
+	return file_proto_stego_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *ContinueInteractiveEncodeResponse) GetFlowId() string {
+	if x != nil {
+		return x.FlowId
+	}
+	return ""
+}
+
+func (x *ContinueInteractiveEncodeResponse) GetCoverText() string {
+	if x != nil {
+		return x.CoverText
+	}
+	return ""
+}
+
+func (x *ContinueInteractiveEncodeResponse) GetSegmentIndex() int32 {
+	if x != nil {
+		return x.SegmentIndex
+	}
+	return 0
+}
+
+func (x *ContinueInteractiveEncodeResponse) GetTotalSegments() int32 {
+	if x != nil {
+		return x.TotalSegments
+	}
+	return 0
+}
+
+func (x *ContinueInteractiveEncodeResponse) GetDone() bool {
+	if x != nil {
+		return x.Done
+	}
+	return false
+}
+
+func (x *ContinueInteractiveEncodeResponse) GetEncodeAttempt() int32 {
+	if x != nil {
+		return x.EncodeAttempt
+	}
+	return 0
+}
+
+type GeneratePeerReplyRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`                      // The cover text just received
+	TopicHint     string                 `protobuf:"bytes,2,opt,name=topic_hint,json=topicHint,proto3" json:"topic_hint,omitempty"` // Topic for contextual reply
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GeneratePeerReplyRequest) Reset() {
+	*x = GeneratePeerReplyRequest{}
+	mi := &file_proto_stego_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GeneratePeerReplyRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GeneratePeerReplyRequest) ProtoMessage() {}
+
+func (x *GeneratePeerReplyRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_stego_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GeneratePeerReplyRequest.ProtoReflect.Descriptor instead.
+func (*GeneratePeerReplyRequest) Descriptor() ([]byte, []int) {
+	return file_proto_stego_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *GeneratePeerReplyRequest) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *GeneratePeerReplyRequest) GetTopicHint() string {
+	if x != nil {
+		return x.TopicHint
+	}
+	return ""
+}
+
+type GeneratePeerReplyResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Reply         string                 `protobuf:"bytes,1,opt,name=reply,proto3" json:"reply,omitempty"` // Natural reply text (no hidden data)
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GeneratePeerReplyResponse) Reset() {
+	*x = GeneratePeerReplyResponse{}
+	mi := &file_proto_stego_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GeneratePeerReplyResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GeneratePeerReplyResponse) ProtoMessage() {}
+
+func (x *GeneratePeerReplyResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_stego_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GeneratePeerReplyResponse.ProtoReflect.Descriptor instead.
+func (*GeneratePeerReplyResponse) Descriptor() ([]byte, []int) {
+	return file_proto_stego_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *GeneratePeerReplyResponse) GetReply() string {
+	if x != nil {
+		return x.Reply
+	}
+	return ""
+}
+
 type AddDecoyKeyRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
@@ -815,7 +1215,7 @@ type AddDecoyKeyRequest struct {
 
 func (x *AddDecoyKeyRequest) Reset() {
 	*x = AddDecoyKeyRequest{}
-	mi := &file_proto_stego_proto_msgTypes[13]
+	mi := &file_proto_stego_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -827,7 +1227,7 @@ func (x *AddDecoyKeyRequest) String() string {
 func (*AddDecoyKeyRequest) ProtoMessage() {}
 
 func (x *AddDecoyKeyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_stego_proto_msgTypes[13]
+	mi := &file_proto_stego_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -840,7 +1240,7 @@ func (x *AddDecoyKeyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddDecoyKeyRequest.ProtoReflect.Descriptor instead.
 func (*AddDecoyKeyRequest) Descriptor() ([]byte, []int) {
-	return file_proto_stego_proto_rawDescGZIP(), []int{13}
+	return file_proto_stego_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *AddDecoyKeyRequest) GetSessionId() string {
@@ -867,7 +1267,7 @@ type AddDecoyKeyResponse struct {
 
 func (x *AddDecoyKeyResponse) Reset() {
 	*x = AddDecoyKeyResponse{}
-	mi := &file_proto_stego_proto_msgTypes[14]
+	mi := &file_proto_stego_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -879,7 +1279,7 @@ func (x *AddDecoyKeyResponse) String() string {
 func (*AddDecoyKeyResponse) ProtoMessage() {}
 
 func (x *AddDecoyKeyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_stego_proto_msgTypes[14]
+	mi := &file_proto_stego_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -892,7 +1292,7 @@ func (x *AddDecoyKeyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddDecoyKeyResponse.ProtoReflect.Descriptor instead.
 func (*AddDecoyKeyResponse) Descriptor() ([]byte, []int) {
-	return file_proto_stego_proto_rawDescGZIP(), []int{14}
+	return file_proto_stego_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *AddDecoyKeyResponse) GetDecoyKey() []byte {
@@ -961,18 +1361,54 @@ const file_proto_stego_proto_rawDesc = "" +
 	"cover_text\x18\x01 \x01(\tR\tcoverText\x12!\n" +
 	"\fbits_encoded\x18\x02 \x01(\x05R\vbitsEncoded\x12\x1d\n" +
 	"\n" +
-	"message_id\x18\x03 \x01(\tR\tmessageId\"q\n" +
+	"message_id\x18\x03 \x01(\tR\tmessageId\"\xdc\x01\n" +
 	"\x14DecodeMessageRequest\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x1d\n" +
 	"\n" +
 	"cover_text\x18\x02 \x01(\tR\tcoverText\x12\x1b\n" +
-	"\tdecoy_key\x18\x03 \x01(\fR\bdecoyKey\"x\n" +
+	"\tdecoy_key\x18\x03 \x01(\fR\bdecoyKey\x12!\n" +
+	"\fpeer_replies\x18\x04 \x03(\tR\vpeerReplies\x12\x1d\n" +
+	"\n" +
+	"topic_hint\x18\x05 \x01(\tR\ttopicHint\x12'\n" +
+	"\x0fencode_attempts\x18\x06 \x03(\x05R\x0eencodeAttempts\"x\n" +
 	"\x15DecodeMessageResponse\x12%\n" +
 	"\x0esecret_message\x18\x01 \x01(\tR\rsecretMessage\x12\x19\n" +
 	"\bis_decoy\x18\x02 \x01(\bR\aisDecoy\x12\x1d\n" +
 	"\n" +
-	"message_id\x18\x03 \x01(\tR\tmessageId\"X\n" +
+	"message_id\x18\x03 \x01(\tR\tmessageId\"\x84\x01\n" +
+	"\x1dStartInteractiveEncodeRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12%\n" +
+	"\x0esecret_message\x18\x02 \x01(\tR\rsecretMessage\x12\x1d\n" +
+	"\n" +
+	"topic_hint\x18\x03 \x01(\tR\ttopicHint\"\xdf\x01\n" +
+	"\x1eStartInteractiveEncodeResponse\x12\x17\n" +
+	"\aflow_id\x18\x01 \x01(\tR\x06flowId\x12\x1d\n" +
+	"\n" +
+	"cover_text\x18\x02 \x01(\tR\tcoverText\x12#\n" +
+	"\rsegment_index\x18\x03 \x01(\x05R\fsegmentIndex\x12%\n" +
+	"\x0etotal_segments\x18\x04 \x01(\x05R\rtotalSegments\x12\x12\n" +
+	"\x04done\x18\x05 \x01(\bR\x04done\x12%\n" +
+	"\x0eencode_attempt\x18\x06 \x01(\x05R\rencodeAttempt\"Z\n" +
+	" ContinueInteractiveEncodeRequest\x12\x17\n" +
+	"\aflow_id\x18\x01 \x01(\tR\x06flowId\x12\x1d\n" +
+	"\n" +
+	"peer_reply\x18\x02 \x01(\tR\tpeerReply\"\xe2\x01\n" +
+	"!ContinueInteractiveEncodeResponse\x12\x17\n" +
+	"\aflow_id\x18\x01 \x01(\tR\x06flowId\x12\x1d\n" +
+	"\n" +
+	"cover_text\x18\x02 \x01(\tR\tcoverText\x12#\n" +
+	"\rsegment_index\x18\x03 \x01(\x05R\fsegmentIndex\x12%\n" +
+	"\x0etotal_segments\x18\x04 \x01(\x05R\rtotalSegments\x12\x12\n" +
+	"\x04done\x18\x05 \x01(\bR\x04done\x12%\n" +
+	"\x0eencode_attempt\x18\x06 \x01(\x05R\rencodeAttempt\"S\n" +
+	"\x18GeneratePeerReplyRequest\x12\x18\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\x12\x1d\n" +
+	"\n" +
+	"topic_hint\x18\x02 \x01(\tR\ttopicHint\"1\n" +
+	"\x19GeneratePeerReplyResponse\x12\x14\n" +
+	"\x05reply\x18\x01 \x01(\tR\x05reply\"X\n" +
 	"\x12AddDecoyKeyRequest\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12#\n" +
@@ -985,7 +1421,7 @@ const file_proto_stego_proto_rawDesc = "" +
 	"\x19SESSION_STATE_UNSPECIFIED\x10\x00\x12&\n" +
 	"\"SESSION_STATE_PENDING_KEY_EXCHANGE\x10\x01\x12\x18\n" +
 	"\x14SESSION_STATE_ACTIVE\x10\x02\x12\x19\n" +
-	"\x15SESSION_STATE_EXPIRED\x10\x032\x97\x05\n" +
+	"\x15SESSION_STATE_EXPIRED\x10\x032\xd8\a\n" +
 	"\fStegoService\x12B\n" +
 	"\rCreateSession\x12\x1e.stego.v1.CreateSessionRequest\x1a\x11.stego.v1.Session\x12<\n" +
 	"\n" +
@@ -994,7 +1430,10 @@ const file_proto_stego_proto_rawDesc = "" +
 	"\x13InitiateKeyExchange\x12$.stego.v1.InitiateKeyExchangeRequest\x1a%.stego.v1.InitiateKeyExchangeResponse\x12b\n" +
 	"\x13CompleteKeyExchange\x12$.stego.v1.CompleteKeyExchangeRequest\x1a%.stego.v1.CompleteKeyExchangeResponse\x12P\n" +
 	"\rEncodeMessage\x12\x1e.stego.v1.EncodeMessageRequest\x1a\x1f.stego.v1.EncodeMessageResponse\x12P\n" +
-	"\rDecodeMessage\x12\x1e.stego.v1.DecodeMessageRequest\x1a\x1f.stego.v1.DecodeMessageResponse\x12J\n" +
+	"\rDecodeMessage\x12\x1e.stego.v1.DecodeMessageRequest\x1a\x1f.stego.v1.DecodeMessageResponse\x12k\n" +
+	"\x16StartInteractiveEncode\x12'.stego.v1.StartInteractiveEncodeRequest\x1a(.stego.v1.StartInteractiveEncodeResponse\x12t\n" +
+	"\x19ContinueInteractiveEncode\x12*.stego.v1.ContinueInteractiveEncodeRequest\x1a+.stego.v1.ContinueInteractiveEncodeResponse\x12\\\n" +
+	"\x11GeneratePeerReply\x12\".stego.v1.GeneratePeerReplyRequest\x1a#.stego.v1.GeneratePeerReplyResponse\x12J\n" +
 	"\vAddDecoyKey\x12\x1c.stego.v1.AddDecoyKeyRequest\x1a\x1d.stego.v1.AddDecoyKeyResponseB\x1fZ\x1dgithub.com/cy/stegochat/protob\x06proto3"
 
 var (
@@ -1010,24 +1449,30 @@ func file_proto_stego_proto_rawDescGZIP() []byte {
 }
 
 var file_proto_stego_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_proto_stego_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_proto_stego_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_proto_stego_proto_goTypes = []any{
-	(SessionState)(0),                   // 0: stego.v1.SessionState
-	(*CreateSessionRequest)(nil),        // 1: stego.v1.CreateSessionRequest
-	(*GetSessionRequest)(nil),           // 2: stego.v1.GetSessionRequest
-	(*ListSessionsRequest)(nil),         // 3: stego.v1.ListSessionsRequest
-	(*ListSessionsResponse)(nil),        // 4: stego.v1.ListSessionsResponse
-	(*Session)(nil),                     // 5: stego.v1.Session
-	(*InitiateKeyExchangeRequest)(nil),  // 6: stego.v1.InitiateKeyExchangeRequest
-	(*InitiateKeyExchangeResponse)(nil), // 7: stego.v1.InitiateKeyExchangeResponse
-	(*CompleteKeyExchangeRequest)(nil),  // 8: stego.v1.CompleteKeyExchangeRequest
-	(*CompleteKeyExchangeResponse)(nil), // 9: stego.v1.CompleteKeyExchangeResponse
-	(*EncodeMessageRequest)(nil),        // 10: stego.v1.EncodeMessageRequest
-	(*EncodeMessageResponse)(nil),       // 11: stego.v1.EncodeMessageResponse
-	(*DecodeMessageRequest)(nil),        // 12: stego.v1.DecodeMessageRequest
-	(*DecodeMessageResponse)(nil),       // 13: stego.v1.DecodeMessageResponse
-	(*AddDecoyKeyRequest)(nil),          // 14: stego.v1.AddDecoyKeyRequest
-	(*AddDecoyKeyResponse)(nil),         // 15: stego.v1.AddDecoyKeyResponse
+	(SessionState)(0),                         // 0: stego.v1.SessionState
+	(*CreateSessionRequest)(nil),              // 1: stego.v1.CreateSessionRequest
+	(*GetSessionRequest)(nil),                 // 2: stego.v1.GetSessionRequest
+	(*ListSessionsRequest)(nil),               // 3: stego.v1.ListSessionsRequest
+	(*ListSessionsResponse)(nil),              // 4: stego.v1.ListSessionsResponse
+	(*Session)(nil),                           // 5: stego.v1.Session
+	(*InitiateKeyExchangeRequest)(nil),        // 6: stego.v1.InitiateKeyExchangeRequest
+	(*InitiateKeyExchangeResponse)(nil),       // 7: stego.v1.InitiateKeyExchangeResponse
+	(*CompleteKeyExchangeRequest)(nil),        // 8: stego.v1.CompleteKeyExchangeRequest
+	(*CompleteKeyExchangeResponse)(nil),       // 9: stego.v1.CompleteKeyExchangeResponse
+	(*EncodeMessageRequest)(nil),              // 10: stego.v1.EncodeMessageRequest
+	(*EncodeMessageResponse)(nil),             // 11: stego.v1.EncodeMessageResponse
+	(*DecodeMessageRequest)(nil),              // 12: stego.v1.DecodeMessageRequest
+	(*DecodeMessageResponse)(nil),             // 13: stego.v1.DecodeMessageResponse
+	(*StartInteractiveEncodeRequest)(nil),     // 14: stego.v1.StartInteractiveEncodeRequest
+	(*StartInteractiveEncodeResponse)(nil),    // 15: stego.v1.StartInteractiveEncodeResponse
+	(*ContinueInteractiveEncodeRequest)(nil),  // 16: stego.v1.ContinueInteractiveEncodeRequest
+	(*ContinueInteractiveEncodeResponse)(nil), // 17: stego.v1.ContinueInteractiveEncodeResponse
+	(*GeneratePeerReplyRequest)(nil),          // 18: stego.v1.GeneratePeerReplyRequest
+	(*GeneratePeerReplyResponse)(nil),         // 19: stego.v1.GeneratePeerReplyResponse
+	(*AddDecoyKeyRequest)(nil),                // 20: stego.v1.AddDecoyKeyRequest
+	(*AddDecoyKeyResponse)(nil),               // 21: stego.v1.AddDecoyKeyResponse
 }
 var file_proto_stego_proto_depIdxs = []int32{
 	5,  // 0: stego.v1.ListSessionsResponse.sessions:type_name -> stego.v1.Session
@@ -1039,17 +1484,23 @@ var file_proto_stego_proto_depIdxs = []int32{
 	8,  // 6: stego.v1.StegoService.CompleteKeyExchange:input_type -> stego.v1.CompleteKeyExchangeRequest
 	10, // 7: stego.v1.StegoService.EncodeMessage:input_type -> stego.v1.EncodeMessageRequest
 	12, // 8: stego.v1.StegoService.DecodeMessage:input_type -> stego.v1.DecodeMessageRequest
-	14, // 9: stego.v1.StegoService.AddDecoyKey:input_type -> stego.v1.AddDecoyKeyRequest
-	5,  // 10: stego.v1.StegoService.CreateSession:output_type -> stego.v1.Session
-	5,  // 11: stego.v1.StegoService.GetSession:output_type -> stego.v1.Session
-	4,  // 12: stego.v1.StegoService.ListSessions:output_type -> stego.v1.ListSessionsResponse
-	7,  // 13: stego.v1.StegoService.InitiateKeyExchange:output_type -> stego.v1.InitiateKeyExchangeResponse
-	9,  // 14: stego.v1.StegoService.CompleteKeyExchange:output_type -> stego.v1.CompleteKeyExchangeResponse
-	11, // 15: stego.v1.StegoService.EncodeMessage:output_type -> stego.v1.EncodeMessageResponse
-	13, // 16: stego.v1.StegoService.DecodeMessage:output_type -> stego.v1.DecodeMessageResponse
-	15, // 17: stego.v1.StegoService.AddDecoyKey:output_type -> stego.v1.AddDecoyKeyResponse
-	10, // [10:18] is the sub-list for method output_type
-	2,  // [2:10] is the sub-list for method input_type
+	14, // 9: stego.v1.StegoService.StartInteractiveEncode:input_type -> stego.v1.StartInteractiveEncodeRequest
+	16, // 10: stego.v1.StegoService.ContinueInteractiveEncode:input_type -> stego.v1.ContinueInteractiveEncodeRequest
+	18, // 11: stego.v1.StegoService.GeneratePeerReply:input_type -> stego.v1.GeneratePeerReplyRequest
+	20, // 12: stego.v1.StegoService.AddDecoyKey:input_type -> stego.v1.AddDecoyKeyRequest
+	5,  // 13: stego.v1.StegoService.CreateSession:output_type -> stego.v1.Session
+	5,  // 14: stego.v1.StegoService.GetSession:output_type -> stego.v1.Session
+	4,  // 15: stego.v1.StegoService.ListSessions:output_type -> stego.v1.ListSessionsResponse
+	7,  // 16: stego.v1.StegoService.InitiateKeyExchange:output_type -> stego.v1.InitiateKeyExchangeResponse
+	9,  // 17: stego.v1.StegoService.CompleteKeyExchange:output_type -> stego.v1.CompleteKeyExchangeResponse
+	11, // 18: stego.v1.StegoService.EncodeMessage:output_type -> stego.v1.EncodeMessageResponse
+	13, // 19: stego.v1.StegoService.DecodeMessage:output_type -> stego.v1.DecodeMessageResponse
+	15, // 20: stego.v1.StegoService.StartInteractiveEncode:output_type -> stego.v1.StartInteractiveEncodeResponse
+	17, // 21: stego.v1.StegoService.ContinueInteractiveEncode:output_type -> stego.v1.ContinueInteractiveEncodeResponse
+	19, // 22: stego.v1.StegoService.GeneratePeerReply:output_type -> stego.v1.GeneratePeerReplyResponse
+	21, // 23: stego.v1.StegoService.AddDecoyKey:output_type -> stego.v1.AddDecoyKeyResponse
+	13, // [13:24] is the sub-list for method output_type
+	2,  // [2:13] is the sub-list for method input_type
 	2,  // [2:2] is the sub-list for extension type_name
 	2,  // [2:2] is the sub-list for extension extendee
 	0,  // [0:2] is the sub-list for field type_name
@@ -1066,7 +1517,7 @@ func file_proto_stego_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_stego_proto_rawDesc), len(file_proto_stego_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   15,
+			NumMessages:   21,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

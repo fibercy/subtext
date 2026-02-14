@@ -76,6 +76,7 @@ Examples:
 		sessionID := resolveSessionID(args[0])
 		coverText := args[1]
 		decoyKeyHex, _ := cmd.Flags().GetString("decoy-key")
+		topicHint, _ := cmd.Flags().GetString("topic")
 
 		var decoyKey []byte
 		if decoyKeyHex != "" {
@@ -93,6 +94,7 @@ Examples:
 			SessionId: sessionID,
 			CoverText: coverText,
 			DecoyKey:  decoyKey,
+			TopicHint: topicHint,
 		})
 		if err != nil {
 			exitError("decoding failed", err)
@@ -151,6 +153,7 @@ func init() {
 	encodeCmd.Flags().StringP("topic", "t", "casual chat", "Topic hint for cover text generation")
 	encodeCmd.Flags().Bool("raw", false, "Output only the cover text (for scripting)")
 	decodeCmd.Flags().StringP("decoy-key", "k", "", "Decoy key (hex) for deniable decryption")
+	decodeCmd.Flags().StringP("topic", "t", "casual chat", "Topic hint used during encoding")
 }
 
 // Alias for encode/decode

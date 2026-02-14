@@ -3,6 +3,7 @@ package server
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/cy/stegochat/internal/crypto"
@@ -22,6 +23,20 @@ type StegoServer struct {
 	store   *store.Store
 	encoder *stego.Encoder
 	decoder *stego.Decoder
+	flowsMu sync.Mutex
+	flows   map[string]*interactiveEncodeFlow
+}
+
+const MaxPlaintextLengthNoDecoy = 512
+
+// InteractiveChunkSize is set to match stego.TargetSegmentPayloadLength
+
+type interactiveEncodeFlow struct {
+	SessionID string
+	Topic     string
+	Chunks    [][]byte
+	NextIndex int
+	Attempts  []int // per-segment encoder attempt numbers (1-based)
 }
 
 // ServerOption configures the server
@@ -37,7 +52,10 @@ func WithLLMClient(client *llm.Client) ServerOption {
 
 // New creates a new StegoServer
 func New(st *store.Store, opts ...ServerOption) *StegoServer {
-	s := &StegoServer{store: st}
+	s := &StegoServer{
+		store: st,
+		flows: make(map[string]*interactiveEncodeFlow),
+	}
 	for _, opt := range opts {
 		opt(s)
 	}
@@ -197,8 +215,15 @@ func (s *StegoServer) EncodeMessage(ctx context.Context, req *pb.EncodeMessageRe
 	if req.SecretMessage == "" {
 		return nil, status.Error(codes.InvalidArgument, "secret_message is required")
 	}
-	if len(req.SecretMessage) > 64 {
-		return nil, status.Error(codes.InvalidArgument, "secret_message too long (max 64 chars)")
+	if req.DecoyMessage != "" {
+		if len(req.SecretMessage) > deniable.MaxPayloadSize {
+			return nil, status.Errorf(codes.InvalidArgument, "secret_message too long for decoy mode (max %d chars)", deniable.MaxPayloadSize)
+		}
+		if len(req.DecoyMessage) > deniable.MaxPayloadSize {
+			return nil, status.Errorf(codes.InvalidArgument, "decoy_message too long (max %d chars)", deniable.MaxPayloadSize)
+		}
+	} else if len(req.SecretMessage) > MaxPlaintextLengthNoDecoy {
+		return nil, status.Errorf(codes.InvalidArgument, "secret_message too long (max %d chars without decoy)", MaxPlaintextLengthNoDecoy)
 	}
 
 	// Get the shared key
@@ -251,7 +276,7 @@ func (s *StegoServer) EncodeMessage(ctx context.Context, req *pb.EncodeMessageRe
 		// Fallback: return placeholder with bit count
 		bitsToEncode := len(payload) * 8
 		return &pb.EncodeMessageResponse{
-			CoverText:   "[LLM not configured - start Ollama with llama3.1:8b]",
+			CoverText:   "[LLM not configured - start Ollama with qwen2.5:14b]",
 			BitsEncoded: int32(bitsToEncode),
 			MessageId:   uuid.New().String(),
 		}, nil
@@ -273,6 +298,147 @@ func (s *StegoServer) EncodeMessage(ctx context.Context, req *pb.EncodeMessageRe
 		BitsEncoded: int32(result.BitsEncoded),
 		MessageId:   uuid.New().String(),
 	}, nil
+}
+
+// StartInteractiveEncode starts a multi-turn stego flow and returns the first cover segment.
+func (s *StegoServer) StartInteractiveEncode(ctx context.Context, req *pb.StartInteractiveEncodeRequest) (*pb.StartInteractiveEncodeResponse, error) {
+	if req.SessionId == "" {
+		return nil, status.Error(codes.InvalidArgument, "session_id is required")
+	}
+	if req.SecretMessage == "" {
+		return nil, status.Error(codes.InvalidArgument, "secret_message is required")
+	}
+	if len(req.SecretMessage) > MaxPlaintextLengthNoDecoy {
+		return nil, status.Errorf(codes.InvalidArgument, "secret_message too long (max %d chars)", MaxPlaintextLengthNoDecoy)
+	}
+	if s.encoder == nil {
+		return nil, status.Error(codes.FailedPrecondition, "LLM encoder not configured")
+	}
+
+	keys, err := s.store.GetKeys(req.SessionId)
+	if err == store.ErrSessionNotFound {
+		return nil, status.Error(codes.NotFound, "session not found")
+	}
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get keys: %v", err)
+	}
+	if keys.SharedKey == nil {
+		return nil, status.Error(codes.FailedPrecondition, "key exchange not completed")
+	}
+
+	ciphertext, err := crypto.CompactEncrypt(keys.SharedKey, []byte(req.SecretMessage))
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "encryption failed: %v", err)
+	}
+	chunks := chunkBytes(ciphertext, stego.TargetSegmentPayloadLength)
+	if len(chunks) == 0 {
+		return nil, status.Error(codes.Internal, "failed to split encrypted payload")
+	}
+
+	topic := req.TopicHint
+	if topic == "" {
+		topic = "weekend plans"
+	}
+
+	flowID := uuid.New().String()
+	s.flowsMu.Lock()
+	s.flows[flowID] = &interactiveEncodeFlow{
+		SessionID: req.SessionId,
+		Topic:     topic,
+		Chunks:    chunks,
+		NextIndex: 0,
+	}
+	s.flowsMu.Unlock()
+
+	next, err := s.nextInteractiveSegment(ctx, flowID, "")
+	if err != nil {
+		return nil, err
+	}
+	return &pb.StartInteractiveEncodeResponse{
+		FlowId:        next.FlowId,
+		CoverText:     next.CoverText,
+		SegmentIndex:  next.SegmentIndex,
+		TotalSegments: next.TotalSegments,
+		Done:          next.Done,
+		EncodeAttempt: next.EncodeAttempt,
+	}, nil
+}
+
+// ContinueInteractiveEncode continues an existing flow using the peer's plain reply as context.
+func (s *StegoServer) ContinueInteractiveEncode(ctx context.Context, req *pb.ContinueInteractiveEncodeRequest) (*pb.ContinueInteractiveEncodeResponse, error) {
+	if req.FlowId == "" {
+		return nil, status.Error(codes.InvalidArgument, "flow_id is required")
+	}
+	return s.nextInteractiveSegment(ctx, req.FlowId, req.PeerReply)
+}
+
+func (s *StegoServer) nextInteractiveSegment(ctx context.Context, flowID, peerReply string) (*pb.ContinueInteractiveEncodeResponse, error) {
+	s.flowsMu.Lock()
+	flow, ok := s.flows[flowID]
+	if !ok {
+		s.flowsMu.Unlock()
+		return nil, status.Error(codes.NotFound, "interactive flow not found or already completed")
+	}
+	if flow.NextIndex >= len(flow.Chunks) {
+		delete(s.flows, flowID)
+		s.flowsMu.Unlock()
+		return nil, status.Error(codes.NotFound, "interactive flow already completed")
+	}
+
+	currentIndex := flow.NextIndex
+	total := len(flow.Chunks)
+	chunk := append([]byte(nil), flow.Chunks[currentIndex]...)
+	topic := flow.Topic
+	s.flowsMu.Unlock()
+
+	encoded, err := s.encoder.EncodeInteractiveSegment(ctx, chunk, topic, peerReply)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "segment encoding failed: %v", err)
+	}
+
+	s.flowsMu.Lock()
+	flow, ok = s.flows[flowID]
+	if !ok {
+		s.flowsMu.Unlock()
+		return nil, status.Error(codes.NotFound, "interactive flow not found")
+	}
+	if flow.NextIndex != currentIndex {
+		s.flowsMu.Unlock()
+		return nil, status.Error(codes.Aborted, "flow advanced concurrently; retry")
+	}
+	flow.NextIndex++
+	flow.Attempts = append(flow.Attempts, encoded.Attempt)
+	done := flow.NextIndex >= len(flow.Chunks)
+	if done {
+		delete(s.flows, flowID)
+	}
+	s.flowsMu.Unlock()
+
+	return &pb.ContinueInteractiveEncodeResponse{
+		FlowId:        flowID,
+		CoverText:     encoded.CoverText,
+		SegmentIndex:  int32(currentIndex + 1),
+		TotalSegments: int32(total),
+		Done:          done,
+		EncodeAttempt: int32(encoded.Attempt),
+	}, nil
+}
+
+func chunkBytes(data []byte, size int) [][]byte {
+	if len(data) == 0 || size <= 0 {
+		return nil
+	}
+	chunks := make([][]byte, 0, (len(data)+size-1)/size)
+	for i := 0; i < len(data); i += size {
+		end := i + size
+		if end > len(data) {
+			end = len(data)
+		}
+		chunk := make([]byte, end-i)
+		copy(chunk, data[i:end])
+		chunks = append(chunks, chunk)
+	}
+	return chunks
 }
 
 // DecodeMessage decodes a secret message from cover text
@@ -308,14 +474,28 @@ func (s *StegoServer) DecodeMessage(ctx context.Context, req *pb.DecodeMessageRe
 	// Check if LLM decoder is available
 	if s.decoder == nil {
 		return &pb.DecodeMessageResponse{
-			SecretMessage: "[LLM not configured - start Ollama with llama3.1:8b]",
+			SecretMessage: "[LLM not configured - start Ollama with qwen2.5:14b]",
 			IsDecoy:       isDecoy,
 			MessageId:     uuid.New().String(),
 		}, nil
 	}
 
+	topic := req.TopicHint
+	if topic == "" {
+		topic = "weekend plans"
+	}
+
+	// Convert proto int32 attempts to []int
+	var attempts []int
+	if len(req.EncodeAttempts) > 0 {
+		attempts = make([]int, len(req.EncodeAttempts))
+		for i, a := range req.EncodeAttempts {
+			attempts[i] = int(a)
+		}
+	}
+
 	// Use LLM to extract bits from cover text
-	result, err := s.decoder.Decode(ctx, req.CoverText, "weekend plans")
+	result, err := s.decoder.DecodeWithPeerReplies(ctx, req.CoverText, topic, req.PeerReplies, attempts)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "decoding failed: %v", err)
 	}
@@ -348,6 +528,30 @@ func (s *StegoServer) DecodeMessage(ctx context.Context, req *pb.DecodeMessageRe
 		SecretMessage: string(standardPlaintext),
 		IsDecoy:       isDecoy,
 		MessageId:     uuid.New().String(),
+	}, nil
+}
+
+// GeneratePeerReply generates a plain conversational reply to a received message.
+func (s *StegoServer) GeneratePeerReply(ctx context.Context, req *pb.GeneratePeerReplyRequest) (*pb.GeneratePeerReplyResponse, error) {
+	if req.Message == "" {
+		return nil, status.Error(codes.InvalidArgument, "message is required")
+	}
+	if s.encoder == nil {
+		return nil, status.Error(codes.FailedPrecondition, "LLM encoder not configured")
+	}
+
+	topic := req.TopicHint
+	if topic == "" {
+		topic = "casual chat"
+	}
+
+	reply, err := s.encoder.GenerateReply(ctx, req.Message, topic)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "reply generation failed: %v", err)
+	}
+
+	return &pb.GeneratePeerReplyResponse{
+		Reply: reply,
 	}, nil
 }
 

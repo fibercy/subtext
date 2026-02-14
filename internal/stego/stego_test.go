@@ -239,3 +239,32 @@ func TestLengthPrefixEncoding(t *testing.T) {
 		t.Errorf("Payload mismatch: got %q, want %q", string(extracted), string(payload))
 	}
 }
+
+func TestSplitCoverSegments(t *testing.T) {
+	cover := "first normal message" + segmentSeparator + "second normal message"
+	segments := splitCoverSegments(cover)
+	if len(segments) != 2 {
+		t.Fatalf("expected 2 segments, got %d", len(segments))
+	}
+	if segments[0] != "first normal message" {
+		t.Fatalf("unexpected first segment: %q", segments[0])
+	}
+	if segments[1] != "second normal message" {
+		t.Fatalf("unexpected second segment: %q", segments[1])
+	}
+}
+
+func TestIsValidCoverSegment(t *testing.T) {
+	valid := "i can meet after work near oak street maybe around seven if traffic is okay"
+	if !isValidCoverSegment(valid) {
+		t.Fatal("expected valid segment to pass quality checks")
+	}
+
+	if isValidCoverSegment("Write One Sentence (Convincer, Closery): include names.") {
+		t.Fatal("expected meta/instruction text to be rejected")
+	}
+
+	if isValidCoverSegment("line one of message\nline two of message") {
+		t.Fatal("expected multi-line segment to be rejected")
+	}
+}

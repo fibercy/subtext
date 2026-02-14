@@ -1,2 +1,12 @@
-Write a short, blunt chat message about {{TOPIC}}. Use sloppy texting habits: lowercase, no punctuation, abbreviations (u, msg, rly, etc), and sentence fragments. Don't be polite or formal. Keep it very mundane and worldly. Make it sound like a quick text sent while walking. No preamble, just the raw text:
-
+Write one natural everyday text message about {{TOPIC}}.
+Hard rules:
+- ENGLISH ONLY - no other languages at all
+- 3 to 5 casual sentences
+- 40 to 70 words total
+- plain conversational English, mostly lowercase
+- mundane and specific (like normal daily life)
+- no bullets, no lists, no quotes
+- no brackets or parentheses
+- no emojis or special characters
+- no explanations about style or generation
+- output only the message text

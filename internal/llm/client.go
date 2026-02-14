@@ -8,19 +8,51 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 )
 
 const (
 	DefaultBaseURL = "http://localhost:11434"
-	DefaultModel   = "qwen3:8b"
+	DefaultModel   = "qwen2.5:14b"
 )
+
+// ChatTemplate holds the markers needed to wrap prompts for a model.
+type ChatTemplate struct {
+	SystemPrefix    string // e.g. "<|im_start|>system\n"
+	SystemSuffix    string // e.g. "<|im_end|>\n"
+	UserPrefix      string // e.g. "<|im_start|>user\n"
+	UserSuffix      string // e.g. "<|im_end|>\n"
+	AssistantPrefix string // e.g. "<|im_start|>assistant\n"
+	SystemMessage   string // default system message
+}
+
+// FormatPrompt wraps an instruction and optional assistant prefix for raw mode.
+func (t *ChatTemplate) FormatPrompt(instruction, assistantText string) string {
+	if t == nil {
+		// No template — return raw concatenation (works for llama3.1 etc.)
+		return instruction + assistantText
+	}
+	var b strings.Builder
+	if t.SystemMessage != "" {
+		b.WriteString(t.SystemPrefix)
+		b.WriteString(t.SystemMessage)
+		b.WriteString(t.SystemSuffix)
+	}
+	b.WriteString(t.UserPrefix)
+	b.WriteString(instruction)
+	b.WriteString(t.UserSuffix)
+	b.WriteString(t.AssistantPrefix)
+	b.WriteString(assistantText)
+	return b.String()
+}
 
 // Client provides access to Ollama API
 type Client struct {
-	baseURL    string
-	model      string
-	httpClient *http.Client
+	baseURL      string
+	model        string
+	httpClient   *http.Client
+	chatTemplate *ChatTemplate // nil until fetched
 }
 
 // ClientOption configures the client
@@ -126,7 +158,6 @@ type TokenizeResponse struct {
 
 // Generate performs text generation
 func (c *Client) Generate(ctx context.Context, prompt string, opts GenerateOptions, logprobs bool) (*GenerateResponse, error) {
-	fmt.Printf("[LLM Req] Prompt: %s\n", prompt)
 	req := GenerateRequest{
 		Model:       c.model,
 		Prompt:      prompt,
@@ -164,74 +195,7 @@ func (c *Client) Generate(ctx context.Context, prompt string, opts GenerateOptio
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
-	fmt.Printf("[LLM Resp] Response: %s\n", result.Response)
 	return &result, nil
-}
-
-// GenerateWithLogprobs generates text and returns token logprobs for constrained decoding
-// This uses streaming to get token-by-token output
-func (c *Client) GenerateWithLogprobs(ctx context.Context, prompt string, opts GenerateOptions) ([]TokenLogprob, error) {
-	fmt.Printf("[LLM Req] Prompt (Stream): %s\n", prompt)
-	req := GenerateRequest{
-		Model:   c.model,
-		Prompt:  prompt,
-		Stream:  true,
-		Options: opts,
-	}
-
-	body, err := json.Marshal(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal request: %w", err)
-	}
-
-	httpReq, err := http.NewRequestWithContext(ctx, "POST", c.baseURL+"/api/generate", bytes.NewReader(body))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
-	httpReq.Header.Set("Content-Type", "application/json")
-
-	resp, err := c.httpClient.Do(httpReq)
-	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("ollama returned status %d: %s", resp.StatusCode, string(body))
-	}
-
-	var tokens []TokenLogprob
-	decoder := json.NewDecoder(resp.Body)
-	for {
-		var chunk struct {
-			Response string `json:"response"`
-			Done     bool   `json:"done"`
-		}
-		if err := decoder.Decode(&chunk); err == io.EOF {
-			break
-		} else if err != nil {
-			return nil, fmt.Errorf("failed to decode stream: %w", err)
-		}
-
-		if chunk.Response != "" {
-			tokens = append(tokens, TokenLogprob{
-				Token: chunk.Response,
-			})
-		}
-
-		if chunk.Done {
-			break
-		}
-	}
-
-	return tokens, nil
-}
-
-// TokenLogprob represents a token with its log probability
-type TokenLogprob struct {
-	Token   string
-	Logprob float64
 }
 
 // Tokenize converts text to token IDs
@@ -324,4 +288,70 @@ func (c *Client) ListModels(ctx context.Context) ([]string, error) {
 		models[i] = m.Name
 	}
 	return models, nil
+}
+
+// FetchChatTemplate queries Ollama for the model's chat template and caches it.
+func (c *Client) FetchChatTemplate(ctx context.Context) (*ChatTemplate, error) {
+	if c.chatTemplate != nil {
+		return c.chatTemplate, nil
+	}
+
+	body, err := json.Marshal(map[string]string{"model": c.model})
+	if err != nil {
+		return nil, err
+	}
+
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", c.baseURL+"/api/show", bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(httpReq)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("api/show returned %d", resp.StatusCode)
+	}
+
+	var result struct {
+		Template string `json:"template"`
+		System   string `json:"system"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	tmpl := detectChatTemplate(result.Template, result.System)
+	c.chatTemplate = tmpl
+	return tmpl, nil
+}
+
+// GetChatTemplate returns the cached chat template (nil if not fetched).
+func (c *Client) GetChatTemplate() *ChatTemplate {
+	return c.chatTemplate
+}
+
+// detectChatTemplate parses an Ollama Go-template string to identify the format.
+func detectChatTemplate(templateStr, systemMsg string) *ChatTemplate {
+	switch {
+	case strings.Contains(templateStr, "<|im_start|>"):
+		// ChatML format (Qwen, Yi, etc.)
+		return &ChatTemplate{
+			SystemPrefix:    "<|im_start|>system\n",
+			SystemSuffix:    "<|im_end|>\n",
+			UserPrefix:      "<|im_start|>user\n",
+			UserSuffix:      "<|im_end|>\n",
+			AssistantPrefix: "<|im_start|>assistant\n",
+			SystemMessage:   systemMsg,
+		}
+	case strings.Contains(templateStr, "<|start_header_id|>"):
+		// Llama 3 format — works fine with raw prompts, no wrapping needed
+		return nil
+	default:
+		return nil
+	}
 }

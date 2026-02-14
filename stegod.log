@@ -1,4 +1,5 @@
-2026/02/07 16:50:52 Using database: /Users/cy/.stegochat/stegochat.db
-2026/02/07 16:50:52 Connected to Ollama at http://localhost:11434 (model: llama3.1:8b)
-2026/02/07 16:50:52 Stego daemon listening on port 50051
-2026/02/07 16:50:55 Shutting down server...
+2026/02/08 15:56:45 Using database: /Users/cy/.stegochat/stegochat.db
+2026/02/08 15:56:45 Connected to Ollama at http://localhost:11434 (model: qwen2.5:14b)
+2026/02/08 15:56:45 Using chat template (system: "You are Qwen, created by Alibaba Cloud. ")
+2026/02/08 15:56:45 Stego daemon listening on port 50051
+2026/02/08 15:58:28 Shutting down server...
