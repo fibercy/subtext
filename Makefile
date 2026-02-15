@@ -13,13 +13,13 @@ proto:
 
 # Build the daemon
 build:
-	@echo "Building stegod..."
-	go build -o bin/stegod ./cmd/stegod
+	@echo "Building subtextd..."
+	go build -o bin/subtextd ./cmd/subtextd
 
 # Build the CLI
 build-cli:
-	@echo "Building stego CLI..."
-	go build -o bin/stego ./cmd/stego
+	@echo "Building subtext CLI..."
+	go build -o bin/subtext ./cmd/subtext
 
 # Build all binaries
 build-all: build build-cli
@@ -43,7 +43,7 @@ clean:
 
 # Run the daemon
 run: build
-	./bin/stegod
+	./bin/subtextd
 
 # Install protoc plugins (one-time setup)
 install-tools:

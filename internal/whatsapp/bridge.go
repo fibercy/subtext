@@ -16,7 +16,7 @@ import (
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 
-	pb "github.com/cy/stegochat/proto"
+	pb "github.com/cy/subtext/proto"
 	"google.golang.org/protobuf/proto"
 )
 

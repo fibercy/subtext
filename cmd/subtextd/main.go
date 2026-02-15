@@ -1,4 +1,4 @@
-// Command stegod is the steganographic chat daemon.
+// Command subtextd is the Subtext daemon.
 package main
 
 import (
@@ -13,17 +13,17 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/cy/stegochat/internal/llm"
-	"github.com/cy/stegochat/internal/server"
-	"github.com/cy/stegochat/internal/store"
-	pb "github.com/cy/stegochat/proto"
+	"github.com/cy/subtext/internal/llm"
+	"github.com/cy/subtext/internal/server"
+	"github.com/cy/subtext/internal/store"
+	pb "github.com/cy/subtext/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
 var (
 	port      = flag.Int("port", 50051, "The server port")
-	dataDir   = flag.String("data-dir", "", "Data directory (default: ~/.stegochat)")
+	dataDir   = flag.String("data-dir", "", "Data directory (default: ~/.subtext)")
 	ollamaURL = flag.String("ollama-url", "http://localhost:11434", "Ollama API URL")
 	model     = flag.String("model", "qwen2.5:14b", "LLM model to use")
 )
@@ -38,7 +38,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Failed to get home directory: %v", err)
 		}
-		dir = filepath.Join(home, ".stegochat")
+		dir = filepath.Join(home, ".subtext")
 	}
 
 	// Create data directory if it doesn't exist
@@ -47,7 +47,7 @@ func main() {
 	}
 
 	// Initialize store
-	dbPath := filepath.Join(dir, "stegochat.db")
+	dbPath := filepath.Join(dir, "subtext.db")
 	st, err := store.New(dbPath)
 	if err != nil {
 		log.Fatalf("Failed to initialize store: %v", err)
@@ -69,7 +69,7 @@ func main() {
 
 	if err := llmClient.Ping(ctx); err != nil {
 		log.Printf("WARNING: Ollama not available at %s: %v", *ollamaURL, err)
-		log.Printf("Steganographic encoding/decoding will be disabled.")
+		log.Printf("Encoding/decoding will be disabled.")
 		log.Printf("To enable, start Ollama with: ollama run %s", *model)
 	} else {
 		log.Printf("Connected to Ollama at %s (model: %s)", *ollamaURL, *model)
@@ -109,7 +109,7 @@ func main() {
 		grpcServer.GracefulStop()
 	}()
 
-	log.Printf("Stego daemon listening on port %d", *port)
+	log.Printf("Subtext daemon listening on port %d", *port)
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
 	}

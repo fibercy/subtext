@@ -1,4 +1,4 @@
-package stego
+package subtext
 
 import (
 	"encoding/binary"

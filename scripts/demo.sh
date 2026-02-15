@@ -1,5 +1,5 @@
 #!/bin/bash
-# Demo script for Steganographic Chat with peer reply simulation
+# Demo script for Subtext with peer reply simulation
 
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -7,8 +7,8 @@ CYAN='\033[0;36m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-STEGO="./bin/stego"
-STEGOD="./bin/stegod"
+SUBTEXT="./bin/subtext"
+SUBTEXTD="./bin/subtextd"
 TMP=$(mktemp -d)
 TOPIC="fitness"
 SECRET="Meet at dock 7 at midnight"
@@ -16,31 +16,31 @@ SECRET="Meet at dock 7 at midnight"
 cleanup() { kill $PID 2>/dev/null; rm -rf "$TMP"; }
 trap cleanup EXIT
 
-echo -e "${BLUE}=== StegoChat Demo ===${NC}"
+echo -e "${BLUE}=== Subtext Demo ===${NC}"
 
 # Start daemon
 echo -e "\n${GREEN}[1] Starting Daemon...${NC}"
-pkill stegod 2>/dev/null
-$STEGOD > stegod.log 2>&1 &
+pkill subtextd 2>/dev/null
+$SUBTEXTD > subtextd.log 2>&1 &
 PID=$!
 sleep 2
 
 # Check status
-$STEGO status
+$SUBTEXT status
 
 # Create session + key exchange
 echo -e "\n${GREEN}[2] Session Setup...${NC}"
-OUT=$($STEGO session create "alice@example.com" --name "Alice")
+OUT=$($SUBTEXT session create "alice@example.com" --name "Alice")
 SID=$(echo "$OUT" | grep "ID:" | awk '{print $2}')
-KEY=$($STEGO session key-exchange $SID | grep -v "Your public key")
-$STEGO session complete-key-exchange $SID $KEY > /dev/null
+KEY=$($SUBTEXT session key-exchange $SID | grep -v "Your public key")
+$SUBTEXT session complete-key-exchange $SID $KEY > /dev/null
 echo "Session $SID ready"
 
 # Interactive encode
 echo -e "\n${GREEN}[3] Encoding: '$SECRET' (topic: $TOPIC)${NC}"
 
 # convo start --raw outputs: flow_id\tcover_text\tdone\tattempt
-RAW=$($STEGO convo start $SID "$SECRET" --topic "$TOPIC" --raw)
+RAW=$($SUBTEXT convo start $SID "$SECRET" --topic "$TOPIC" --raw)
 FLOW=$(printf '%s' "$RAW" | cut -f1)
 COVER=$(printf '%s' "$RAW" | cut -f2)
 DONE=$(printf '%s' "$RAW" | cut -f3)
@@ -58,13 +58,13 @@ DECODE_ARGS=("--cover-file" "$TMP/all.txt" "--topic" "$TOPIC" "--attempt" "$ATTE
 
 while [ "$DONE" = "0" ]; do
     # Peer reply
-    REPLY=$($STEGO reply "$COVER" --topic "$TOPIC" --raw)
+    REPLY=$($SUBTEXT reply "$COVER" --topic "$TOPIC" --raw)
     echo -e "${GREEN}Bob:${NC}   $REPLY"
     DECODE_ARGS[${#DECODE_ARGS[@]}]="--peer-reply"
     DECODE_ARGS[${#DECODE_ARGS[@]}]="$REPLY"
 
     # Next segment
-    RAW=$($STEGO convo next "$FLOW" "$REPLY" --raw)
+    RAW=$($SUBTEXT convo next "$FLOW" "$REPLY" --raw)
     COVER=$(printf '%s' "$RAW" | cut -f2)
     DONE=$(printf '%s' "$RAW" | cut -f3)
     ATTEMPT=$(printf '%s' "$RAW" | cut -f4)
@@ -88,7 +88,7 @@ done
 
 # Decode
 echo -e "\n${GREEN}[4] Decoding...${NC}"
-DECODED=$($STEGO convo decode "$SID" "${DECODE_ARGS[@]}" 2>&1)
+DECODED=$($SUBTEXT convo decode "$SID" "${DECODE_ARGS[@]}" 2>&1)
 echo "Decoded: $DECODED"
 
 if [ "$DECODED" = "$SECRET" ]; then

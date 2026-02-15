@@ -11,7 +11,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cy/stegochat/internal/crypto"
+	"github.com/cy/subtext/internal/crypto"
 )
 
 var (

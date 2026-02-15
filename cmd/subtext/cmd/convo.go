@@ -5,8 +5,8 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/cy/stegochat/internal/stego"
-	pb "github.com/cy/stegochat/proto"
+	"github.com/cy/subtext/internal/subtext"
+	pb "github.com/cy/subtext/proto"
 	"github.com/spf13/cobra"
 )
 
@@ -118,7 +118,7 @@ var convoDecodeCmd = &cobra.Command{
 		var coverText string
 		switch {
 		case len(covers) > 0:
-			coverText = stego.JoinCoverSegments(covers)
+			coverText = subtext.JoinCoverSegments(covers)
 		case coverFile != "":
 			data, err := os.ReadFile(coverFile)
 			if err != nil {

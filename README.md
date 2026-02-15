@@ -1,4 +1,4 @@
-# Stegochat
+# Subtext
 
 A steganographic chat system that hides encrypted messages within natural-looking cover text using LLM-based encoding.
 
@@ -13,7 +13,7 @@ A steganographic chat system that hides encrypted messages within natural-lookin
 
 ## How It Works
 
-Stegochat uses **LLM logprobs** to hide information in natural-looking text:
+Subtext uses **LLM logprobs** to hide information in natural-looking text:
 
 1. **Encoding**: For each chunk of bits to hide, the LLM generates multiple candidate tokens. The encoder selects a specific candidate based on the bit value, producing text that appears natural but encodes secret data.
 
@@ -67,35 +67,35 @@ bash scripts/demo.sh
 
 ```bash
 # 1. Start the daemon
-./bin/stegod
+./bin/subtextd
 
 # 2. Check status
-./bin/stego status
+./bin/subtext status
 
 # 3. Create a session
-./bin/stego session create "alice@example.com" --name "Alice"
+./bin/subtext session create "alice@example.com" --name "Alice"
 
 # 4. Perform key exchange
-./bin/stego session key-exchange <session-id>
+./bin/subtext session key-exchange <session-id>
 
 # 5. Encode a secret message
-./bin/stego encode <session-id> "Meet at dock 7" --topic "fitness"
+./bin/subtext encode <session-id> "Meet at dock 7" --topic "fitness"
 
 # 6. Decode a message
-./bin/stego decode <session-id> "<cover-text>" --topic "fitness"
+./bin/subtext decode <session-id> "<cover-text>" --topic "fitness"
 ```
 
 ## CLI Commands
 
 | Command | Description |
 |---------|-------------|
-| `stego status` | Check daemon and Ollama status |
-| `stego session create <peer> --name <name>` | Create a new session |
-| `stego session list` | List all sessions |
-| `stego session key-exchange <id>` | Initiate key exchange |
-| `stego encode <id> <secret> --topic <topic>` | Encode secret into cover text |
-| `stego decode <id> <cover> --topic <topic>` | Decode secret from cover text |
-| `stego analyze <text>` | Analyze text for steganographic detection |
+| `subtext status` | Check daemon and Ollama status |
+| `subtext session create <peer> --name <name>` | Create a new session |
+| `subtext session list` | List all sessions |
+| `subtext session key-exchange <id>` | Initiate key exchange |
+| `subtext encode <id> <secret> --topic <topic>` | Encode secret into cover text |
+| `subtext decode <id> <cover> --topic <topic>` | Decode secret from cover text |
+| `subtext analyze <text>` | Analyze text for steganographic detection |
 
 ## Configuration
 
@@ -103,8 +103,8 @@ bash scripts/demo.sh
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `STEGOD_PORT` | `50051` | gRPC server port |
-| `STEGOD_DATA_DIR` | `~/.stegochat` | Data directory |
+| `SUBTEXTD_PORT` | `50051` | gRPC server port |
+| `SUBTEXTD_DATA_DIR` | `~/.subtext` | Data directory |
 | `OLLAMA_HOST` | `http://localhost:11434` | Ollama API URL |
 
 ### Supported Models
@@ -123,8 +123,8 @@ Models must support the `logprobs` API parameter.
 ┌─────────────────────────────────────────────────────────┐
 │                    Your Device                          │
 │  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐  │
-│  │  stego CLI  │◄──►│ Stego Daemon│◄──►│   Ollama    │  │
-│  │             │gRPC│   (stegod)  │HTTP│ (qwen3:8b)  │  │
+│  │ subtext CLI │◄──►│   Subtext   │◄──►│   Ollama    │  │
+│  │             │gRPC│  (subtextd) │HTTP│ (qwen3:8b)  │  │
 │  └─────────────┘    └──────┬──────┘    └─────────────┘  │
 │                            │                            │
 │                      ┌─────▼─────┐                      │
@@ -146,21 +146,21 @@ Models must support the `logprobs` API parameter.
 ```
 .
 ├── cmd/
-│   ├── stego/            # CLI tool
-│   │   └── cmd/          # Cobra commands
-│   └── stegod/           # Daemon entry point
+│   ├── subtext/         # CLI tool
+│   │   └── cmd/         # Cobra commands
+│   └── subtextd/        # Daemon entry point
 ├── internal/
-│   ├── analysis/         # Text analysis for detection
-│   ├── crypto/           # X25519 + AES-256-GCM
-│   ├── deniable/         # Deniable encryption
-│   ├── llm/              # Ollama client
-│   ├── server/           # gRPC server
-│   ├── stego/            # Steganographic encoding/decoding
-│   └── store/            # SQLite storage
+│   ├── analysis/        # Text analysis for detection
+│   ├── crypto/          # X25519 + AES-256-GCM
+│   ├── deniable/        # Deniable encryption
+│   ├── llm/             # Ollama client
+│   ├── server/          # gRPC server
+│   ├── subtext/         # Steganographic encoding/decoding
+│   └── store/           # SQLite storage
 ├── proto/
-│   └── stego.proto       # gRPC service definition
+│   └── stego.proto      # gRPC service definition
 ├── scripts/
-│   └── demo.sh           # Demo script
+│   └── demo.sh          # Demo script
 └── Makefile
 ```
 
@@ -188,4 +188,3 @@ make test-cover
 ## License
 
 MIT
-

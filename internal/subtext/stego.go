@@ -1,5 +1,5 @@
-// Package stego implements steganographic encoding/decoding using LLM-based text generation.
-package stego
+// Package subtext implements steganographic encoding/decoding using LLM-based text generation.
+package subtext
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/cy/stegochat/internal/llm"
+	"github.com/cy/subtext/internal/llm"
 )
 
 const (

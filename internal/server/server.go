@@ -6,12 +6,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cy/stegochat/internal/crypto"
-	"github.com/cy/stegochat/internal/deniable"
-	"github.com/cy/stegochat/internal/llm"
-	"github.com/cy/stegochat/internal/stego"
-	"github.com/cy/stegochat/internal/store"
-	pb "github.com/cy/stegochat/proto"
+	"github.com/cy/subtext/internal/crypto"
+	"github.com/cy/subtext/internal/deniable"
+	"github.com/cy/subtext/internal/llm"
+	"github.com/cy/subtext/internal/subtext"
+	"github.com/cy/subtext/internal/store"
+	pb "github.com/cy/subtext/proto"
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -21,15 +21,15 @@ import (
 type StegoServer struct {
 	pb.UnimplementedStegoServiceServer
 	store   *store.Store
-	encoder *stego.Encoder
-	decoder *stego.Decoder
+	encoder *subtext.Encoder
+	decoder *subtext.Decoder
 	flowsMu sync.Mutex
 	flows   map[string]*interactiveEncodeFlow
 }
 
 const MaxPlaintextLengthNoDecoy = 512
 
-// InteractiveChunkSize is set to match stego.TargetSegmentPayloadLength
+// InteractiveChunkSize is set to match subtext.TargetSegmentPayloadLength
 
 type interactiveEncodeFlow struct {
 	SessionID string
@@ -45,8 +45,8 @@ type ServerOption func(*StegoServer)
 // WithLLMClient sets the LLM client for encoding/decoding
 func WithLLMClient(client *llm.Client) ServerOption {
 	return func(s *StegoServer) {
-		s.encoder = stego.NewEncoder(client)
-		s.decoder = stego.NewDecoder(client)
+		s.encoder = subtext.NewEncoder(client)
+		s.decoder = subtext.NewDecoder(client)
 	}
 }
 
@@ -330,7 +330,7 @@ func (s *StegoServer) StartInteractiveEncode(ctx context.Context, req *pb.StartI
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "encryption failed: %v", err)
 	}
-	chunks := chunkBytes(ciphertext, stego.TargetSegmentPayloadLength)
+	chunks := chunkBytes(ciphertext, subtext.TargetSegmentPayloadLength)
 	if len(chunks) == 0 {
 		return nil, status.Error(codes.Internal, "failed to split encrypted payload")
 	}

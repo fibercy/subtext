@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/cy/stegochat/internal/store"
-	pb "github.com/cy/stegochat/proto"
+	"github.com/cy/subtext/internal/store"
+	pb "github.com/cy/subtext/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"

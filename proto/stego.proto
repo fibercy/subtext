@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package stego.v1;
 
-option go_package = "github.com/cy/stegochat/proto";
+option go_package = "github.com/cy/subtext/proto";
 
 // StegoService provides steganographic encoding/decoding capabilities
 service StegoService {

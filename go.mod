@@ -1,4 +1,4 @@
-module github.com/cy/stegochat
+module github.com/cy/subtext
 
 go 1.24.0
 

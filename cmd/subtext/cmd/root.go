@@ -1,4 +1,4 @@
-// Package cmd implements the stego CLI commands.
+// Package cmd implements the subtext CLI commands.
 package cmd
 
 import (
@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	pb "github.com/cy/stegochat/proto"
+	pb "github.com/cy/subtext/proto"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -21,9 +21,9 @@ var (
 
 // rootCmd is the base command
 var rootCmd = &cobra.Command{
-	Use:   "stego",
-	Short: "Steganographic chat CLI",
-	Long: `A CLI client for the steganographic chat daemon.
+	Use:   "subtext",
+	Short: "Subtext CLI",
+	Long: `A CLI client for the Subtext daemon.
 
 Encode secret messages into natural-looking cover text and decode them back.
 Supports deniable encryption with decoy messages.`,

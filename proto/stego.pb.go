@@ -1434,7 +1434,7 @@ const file_proto_stego_proto_rawDesc = "" +
 	"\x16StartInteractiveEncode\x12'.stego.v1.StartInteractiveEncodeRequest\x1a(.stego.v1.StartInteractiveEncodeResponse\x12t\n" +
 	"\x19ContinueInteractiveEncode\x12*.stego.v1.ContinueInteractiveEncodeRequest\x1a+.stego.v1.ContinueInteractiveEncodeResponse\x12\\\n" +
 	"\x11GeneratePeerReply\x12\".stego.v1.GeneratePeerReplyRequest\x1a#.stego.v1.GeneratePeerReplyResponse\x12J\n" +
-	"\vAddDecoyKey\x12\x1c.stego.v1.AddDecoyKeyRequest\x1a\x1d.stego.v1.AddDecoyKeyResponseB\x1fZ\x1dgithub.com/cy/stegochat/protob\x06proto3"
+	"\vAddDecoyKey\x12\x1c.stego.v1.AddDecoyKeyRequest\x1a\x1d.stego.v1.AddDecoyKeyResponseB\x1dZ\x1bgithub.com/cy/subtext/protob\x06proto3"
 
 var (
 	file_proto_stego_proto_rawDescOnce sync.Once

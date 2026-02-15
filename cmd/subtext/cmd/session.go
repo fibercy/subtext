@@ -6,7 +6,7 @@ import (
 	"os"
 	"text/tabwriter"
 
-	pb "github.com/cy/stegochat/proto"
+	pb "github.com/cy/subtext/proto"
 	"github.com/spf13/cobra"
 )
 

@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/cy/stegochat/internal/whatsapp"
+	"github.com/cy/subtext/internal/whatsapp"
 	"github.com/spf13/cobra"
 )
 

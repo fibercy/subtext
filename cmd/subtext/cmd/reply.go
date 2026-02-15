@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	pb "github.com/cy/stegochat/proto"
+	pb "github.com/cy/subtext/proto"
 	"github.com/spf13/cobra"
 )
 

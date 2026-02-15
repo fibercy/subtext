@@ -3,7 +3,7 @@ package deniable
 import (
 	"testing"
 
-	"github.com/cy/stegochat/internal/crypto"
+	"github.com/cy/subtext/internal/crypto"
 )
 
 func TestEncryptDecryptNoDecoy(t *testing.T) {

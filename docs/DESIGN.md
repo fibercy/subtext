@@ -1,4 +1,4 @@
-# Steganographic Chat System — Implementation Plan
+# Subtext — Implementation Plan
 
 A local-first messaging system where encrypted communications appear as natural conversations to third parties, using LLM-based steganography.
 

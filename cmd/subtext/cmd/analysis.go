@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cy/stegochat/internal/analysis"
+	"github.com/cy/subtext/internal/analysis"
 	"github.com/spf13/cobra"
 )
 
