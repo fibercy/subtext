@@ -7,6 +7,7 @@ A steganographic chat system that hides encrypted messages within natural-lookin
 - **End-to-end encryption**: X25519 key exchange + AES-256-GCM
 - **Steganographic encoding**: Messages hidden in LLM-generated cover text using logprobs-based token selection
 - **Deniable encryption**: Multiple decryption keys for plausible deniability
+- **Interactive conversations**: Multi-segment encoding with natural peer reply generation
 - **Local-first**: All crypto happens on your device, plaintext never leaves
 - **gRPC API**: Easy integration with any language
 - **CLI tool**: Full-featured command line interface
@@ -43,7 +44,7 @@ brew install ollama
 ollama serve
 
 # Pull the default model
-ollama pull qwen3:8b
+ollama pull qwen2.5:14b
 ```
 
 ### Build
@@ -95,25 +96,22 @@ bash scripts/demo.sh
 | `subtext session key-exchange <id>` | Initiate key exchange |
 | `subtext encode <id> <secret> --topic <topic>` | Encode secret into cover text |
 | `subtext decode <id> <cover> --topic <topic>` | Decode secret from cover text |
+| `subtext convo start <id> <secret> --topic <t>` | Start interactive multi-segment encoding |
+| `subtext convo next <flow-id> <peer-reply>` | Continue with next segment after peer reply |
+| `subtext convo decode <id> --cover-file <f>` | Decode all collected segments |
+| `subtext reply <message> --topic <topic>` | Generate a natural peer reply (no hidden data) |
 | `subtext analyze <text>` | Analyze text for steganographic detection |
 
 ## Configuration
 
-### Environment Variables
+### Daemon Flags
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SUBTEXTD_PORT` | `50051` | gRPC server port |
-| `SUBTEXTD_DATA_DIR` | `~/.subtext` | Data directory |
-| `OLLAMA_HOST` | `http://localhost:11434` | Ollama API URL |
-
-### Supported Models
-
-The default model is `qwen3:8b`. You can change it by modifying `internal/llm/client.go`:
-
-```go
-const DefaultModel = "qwen3:8b"
-```
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--port` | `50051` | gRPC server port |
+| `--data-dir` | `~/.subtext` | Data directory |
+| `--ollama-url` | `http://localhost:11434` | Ollama API URL |
+| `--model` | `qwen2.5:14b` | LLM model to use |
 
 Models must support the `logprobs` API parameter.
 
@@ -124,7 +122,7 @@ Models must support the `logprobs` API parameter.
 │                    Your Device                          │
 │  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐  │
 │  │ subtext CLI │◄──►│   Subtext   │◄──►│   Ollama    │  │
-│  │             │gRPC│  (subtextd) │HTTP│ (qwen3:8b)  │  │
+│  │             │gRPC│  (subtextd) │HTTP│(qwen2.5:14b)│  │
 │  └─────────────┘    └──────┬──────┘    └─────────────┘  │
 │                            │                            │
 │                      ┌─────▼─────┐                      │
@@ -187,4 +185,4 @@ make test-cover
 
 ## License
 
-MIT
+GPL-3.0 - see [LICENSE](LICENSE)
