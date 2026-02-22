@@ -9,6 +9,7 @@ import (
 	"hash/fnv"
 	"log"
 	"os"
+	"sort"
 	"strings"
 	"unicode"
 
@@ -19,9 +20,10 @@ const (
 	// MaxSecretLength is the maximum encrypted payload length per segment in bytes
 	MaxSecretLength = 256
 	// TargetSegmentPayloadLength is the target encrypted payload size per generated cover segment.
-	// With arithmetic coding: 6 payload + 2 length prefix = 8 bytes = 64 bits.
-	// At ~1 bits/token avg ≈ 90-100 tokens per segment.
-	TargetSegmentPayloadLength = 6
+	// Larger segments amortize the fixed 64-bit AC padding overhead better.
+	// With arithmetic coding: 20 payload + 2 length prefix = 22 bytes = 176 bits + 64 padding.
+	// Short messages (< 20 bytes encrypted) fit in a single segment.
+	TargetSegmentPayloadLength = 20
 	// MaxSegmentEncodeAttempts is the max retries to regenerate a valid segment.
 	MaxSegmentEncodeAttempts = 12
 )
@@ -678,13 +680,25 @@ func isPunctuation(c byte) bool {
 	return false
 }
 
-// makePrefixFree removes candidates whose token is a prefix of (or has a prefix in)
-// an already-accepted candidate. This ensures unambiguous token matching during decode.
-// Candidates are processed in logprob order (most probable first) so higher-probability
-// tokens are preferred.
+// makePrefixFree removes candidates whose token is a prefix of another candidate.
+// This ensures unambiguous token matching during decode (the decoder uses longest
+// match, so two tokens where one is a prefix of another would cause ambiguity).
+//
+// Strategy: prefer LONGER tokens over shorter ones. Longer tokens are more unique
+// (less likely to be prefixes of each other) and preserving more candidates increases
+// the per-token information content dramatically. For example, keeping {" they",
+// " there", " them", " think"} (4 candidates, ~1.7 bits) instead of {" the", " think"}
+// (2 candidates, ~0.2 bits) by dropping the short prefix " the".
 func makePrefixFree(candidates []llm.LogprobToken) []llm.LogprobToken {
-	result := make([]llm.LogprobToken, 0, len(candidates))
-	for _, c := range candidates {
+	// Sort by token length descending so longer tokens are accepted first.
+	sorted := make([]llm.LogprobToken, len(candidates))
+	copy(sorted, candidates)
+	sort.Slice(sorted, func(i, j int) bool {
+		return len(sorted[i].Token) > len(sorted[j].Token)
+	})
+
+	result := make([]llm.LogprobToken, 0, len(sorted))
+	for _, c := range sorted {
 		conflict := false
 		for _, r := range result {
 			if strings.HasPrefix(c.Token, r.Token) || strings.HasPrefix(r.Token, c.Token) {

@@ -2,7 +2,6 @@ package subtext
 
 import (
 	"fmt"
-	"math"
 	"sort"
 
 	"github.com/cy/subtext/internal/llm"
@@ -46,7 +45,12 @@ type CandidateDistribution struct {
 	Total  uint32
 }
 
-// buildDistribution creates a quantized CDF from LLM logprob candidates.
+// buildDistribution creates a uniform CDF from LLM logprob candidates.
+// All candidates receive equal weight. This makes the distribution depend only
+// on WHICH tokens are present (determined by the candidate set), not on their
+// exact logprob values — eliminating sensitivity to tiny LLM logprob variations
+// between encode and decode calls.
+// With N candidates each token encodes log2(N) bits.
 func buildDistribution(candidates []llm.LogprobToken) *CandidateDistribution {
 	if len(candidates) == 0 {
 		return &CandidateDistribution{Total: 0}
@@ -58,64 +62,27 @@ func buildDistribution(candidates []llm.LogprobToken) *CandidateDistribution {
 		return sorted[i].Token < sorted[j].Token
 	})
 
-	probs := make([]float64, len(sorted))
-	sumProb := 0.0
-	for i, c := range sorted {
-		probs[i] = math.Exp(c.Logprob)
-		if probs[i] < 1e-20 {
-			probs[i] = 1e-20
-		}
-		sumProb += probs[i]
+	n := uint32(len(sorted))
+	weight := QuantizationTotal / n
+	if weight < 1 {
+		weight = 1
 	}
-	for i := range probs {
-		probs[i] /= sumProb
-	}
-
-	weights := make([]uint32, len(sorted))
-	var totalWeight uint32
-	maxIdx := 0
-	maxWeight := uint32(0)
-	for i, p := range probs {
-		w := uint32(math.Round(p * float64(QuantizationTotal)))
-		if w < MinTokenWeight {
-			w = MinTokenWeight
-		}
-		weights[i] = w
-		totalWeight += w
-		if w > maxWeight {
-			maxWeight = w
-			maxIdx = i
-		}
-	}
-
-	if totalWeight > QuantizationTotal {
-		diff := totalWeight - QuantizationTotal
-		if weights[maxIdx] > diff+MinTokenWeight {
-			weights[maxIdx] -= diff
-		} else {
-			for totalWeight > QuantizationTotal {
-				for i := range weights {
-					if weights[i] > MinTokenWeight && totalWeight > QuantizationTotal {
-						weights[i]--
-						totalWeight--
-					}
-				}
-			}
-		}
-	} else if totalWeight < QuantizationTotal {
-		weights[maxIdx] += QuantizationTotal - totalWeight
-	}
+	remainder := QuantizationTotal - weight*n
 
 	tokens := make([]CandidateToken, len(sorted))
 	var cumulative uint32
 	for i, c := range sorted {
+		w := weight
+		if uint32(i) < remainder {
+			w++ // spread remainder across first few tokens
+		}
 		tokens[i] = CandidateToken{
 			Token:    c.Token,
-			Weight:   weights[i],
+			Weight:   w,
 			CumStart: cumulative,
-			CumEnd:   cumulative + weights[i],
+			CumEnd:   cumulative + w,
 		}
-		cumulative += weights[i]
+		cumulative += w
 	}
 
 	return &CandidateDistribution{
