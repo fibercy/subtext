@@ -15,15 +15,11 @@ import (
 )
 
 const (
-	// BitsPerDecision is the number of bits encoded per token decision.
-	// With token-hash encoding and ~10-15 filtered candidates, ~78% of
-	// positions encode 2 bits, the rest fall back to 1 → avg ~1.5 bits/token.
-	BitsPerDecision = 2
 	// MaxSecretLength is the maximum encrypted payload length per segment in bytes
 	MaxSecretLength = 256
 	// TargetSegmentPayloadLength is the target encrypted payload size per generated cover segment.
-	// At ~1.5 bits/token avg: 4 payload + 2 length prefix = 6 bytes = 48 bits ≈ 27 tokens.
-	// Proven reliable: keeps each segment within the model's coherent generation range.
+	// With arithmetic coding: 4 payload + 2 length prefix = 6 bytes = 48 bits.
+	// At ~1.5 bits/token avg ≈ 32 tokens per segment.
 	TargetSegmentPayloadLength = 4
 	// MaxSegmentEncodeAttempts is the max retries to regenerate a valid segment.
 	MaxSegmentEncodeAttempts = 12
@@ -120,13 +116,6 @@ func (e *Encoder) encodeSegment(ctx context.Context, prompt string, encryptedPay
 	copy(payloadWithLen[2:], encryptedPayload)
 
 	bits := bytesToBits(payloadWithLen)
-	// Pad to a multiple of BitsPerDecision so the encoder always uses the full
-	// bit width. Without this, the last token might encode fewer bits than the
-	// decoder extracts (the decoder can't know the total count), causing a
-	// bit-stream shift that corrupts the payload.
-	for len(bits)%BitsPerDecision != 0 {
-		bits = append(bits, false)
-	}
 	for attempt := 1; attempt <= MaxSegmentEncodeAttempts; attempt++ {
 		attemptPrompt := prompt + promptVariation(attempt)
 		coverText, tokenCount, bitsEncoded, err := e.generateWithBits(ctx, attemptPrompt, bits)
@@ -194,15 +183,16 @@ func promptVariation(attempt int) string {
 	return variations[(attempt-2)%len(variations)]
 }
 
-// generateWithBits generates text while embedding bits through token selection from logprobs.
+// generateWithBits generates text while embedding bits through arithmetic coding.
+// Uses LLM logprob distributions to select tokens that encode message bits.
 func (e *Encoder) generateWithBits(ctx context.Context, instruction string, bits []bool) (string, int, int, error) {
 	var result strings.Builder
-	bitIndex := 0
+	enc := NewArithEncoder(bits)
+	originalBitLen := len(bits)
 	tokenCount := 0
 	eosRecoveries := 0
 
-	for bitIndex < len(bits) {
-		bitsToEncode := min(BitsPerDecision, len(bits)-bitIndex)
+	for !enc.Done(originalBitLen) {
 		currentPrompt := e.formatPrompt(instruction, result.String())
 
 		resp, err := e.llmClient.Generate(ctx, currentPrompt, llm.GenerateOptions{
@@ -244,47 +234,11 @@ func (e *Encoder) generateWithBits(ctx context.Context, instruction string, bits
 			continue
 		}
 
-		// Use token-hash encoding: assign bits based on hash of token content,
-		// not candidate index. This is immune to GPU-caused candidate reordering.
-		// IMPORTANT: Use the same bit-width determination as the decoder
-		// (all hash slots must be covered) to keep bit streams in sync.
-		numSlots := 1 << bitsToEncode
-		hashSet := make(map[int]bool)
-		for _, c := range candidates {
-			hashSet[tokenHashValue(c.Token, numSlots)] = true
-		}
-		for bitsToEncode > 0 && len(hashSet) < (1<<bitsToEncode) {
-			bitsToEncode--
-			numSlots = 1 << bitsToEncode
-			hashSet = make(map[int]bool)
-			for _, c := range candidates {
-				hashSet[tokenHashValue(c.Token, numSlots)] = true
-			}
-		}
-
-		if bitsToEncode == 0 {
-			// No bits can be encoded at this position — write top candidate
-			result.WriteString(candidates[0].Token)
-			tokenCount++
-			continue
-		}
-
-		targetValue := bitsToInt(bits[bitIndex:bitIndex+bitsToEncode]) % numSlots
-		selectedToken := ""
-		for _, c := range candidates {
-			if tokenHashValue(c.Token, numSlots) == targetValue {
-				selectedToken = c.Token
-				break
-			}
-		}
-		if selectedToken == "" {
-			result.WriteString(candidates[0].Token)
-			tokenCount++
-			continue
-		}
-		result.WriteString(selectedToken)
+		// Build quantized distribution and select token via arithmetic coding
+		dist := buildDistribution(candidates)
+		token := enc.EncodeStep(dist)
+		result.WriteString(token)
 		tokenCount++
-		bitIndex += bitsToEncode
 
 		if tokenCount > 500 {
 			break
@@ -294,7 +248,7 @@ func (e *Encoder) generateWithBits(ctx context.Context, instruction string, bits
 	// Tail generation: continue generating tokens (without encoding bits) until
 	// the sentence ends naturally. This avoids mid-sentence cutoffs like
 	// "hope you manage to squeeze out a" and produces complete sentences.
-	if bitIndex >= len(bits) {
+	if enc.Done(originalBitLen) {
 		tailText := result.String()
 		for i := 0; i < 20; i++ {
 			trimmed := strings.TrimSpace(tailText)
@@ -327,7 +281,11 @@ func (e *Encoder) generateWithBits(ctx context.Context, instruction string, bits
 		result.WriteString(tailText)
 	}
 
-	return strings.TrimSpace(result.String()), tokenCount, bitIndex, nil
+	bitsEncoded := enc.BitsConsumed()
+	if bitsEncoded > originalBitLen {
+		bitsEncoded = originalBitLen
+	}
+	return strings.TrimSpace(result.String()), tokenCount, bitsEncoded, nil
 }
 
 // GenerateReply produces a plain (non-steganographic) conversational reply to a
@@ -442,8 +400,8 @@ func (d *Decoder) formatPrompt(instruction, assistantText string) string {
 
 func (d *Decoder) decodeSegment(ctx context.Context, coverText string, instruction string, attempt int) (*DecodeResult, error) {
 	instruction = instruction + promptVariation(attempt)
-	// Extract bits by matching tokens against logprobs at each position
-	var extractedBits []bool
+
+	dec := NewArithDecoder()
 	var assistantText strings.Builder // accumulated matched tokens
 	remainingText := coverText
 	tokenCount := 0
@@ -451,14 +409,13 @@ func (d *Decoder) decodeSegment(ctx context.Context, coverText string, instructi
 	// encoding may have removed a leading space from the cover text.
 	allowTrimmed := true
 	// expectedTotalBits is set once the 2-byte length prefix is decoded.
-	// It lets us limit extraction to exactly the number of bits the encoder
-	// produced, preventing over-extraction at the last token.
+	// Used as an early-stop optimization to avoid unnecessary LLM calls.
 	expectedTotalBits := 0
 	eosRecoveries := 0
 
 	for len(remainingText) > 0 {
-		// Check if we've extracted enough bits
-		if expectedTotalBits > 0 && len(extractedBits) >= expectedTotalBits {
+		// Early stop: we have enough bits for the full payload
+		if expectedTotalBits > 0 && dec.BitsRecovered() >= expectedTotalBits {
 			break
 		}
 
@@ -507,51 +464,23 @@ func (d *Decoder) decodeSegment(ctx context.Context, coverText string, instructi
 			break
 		}
 
-		// Token-hash decoding: match token in cover text against candidates,
-		// then compute hash to extract bits (immune to candidate reordering).
+		// Build distribution (same canonical ordering as encoder)
+		dist := buildDistribution(candidates)
 
-		// Determine max bits for this position: use remaining count if known
-		maxBitsThisToken := BitsPerDecision
-		if expectedTotalBits > 0 {
-			remaining := expectedTotalBits - len(extractedBits)
-			if remaining <= 0 {
-				break
-			}
-			maxBitsThisToken = min(BitsPerDecision, remaining)
-		}
-
-		// Determine how many bit-slots exist for these candidates
-		numSlots := 1 << maxBitsThisToken
-		bitsToExtract := maxBitsThisToken
-		// Check if enough distinct hash values exist among candidates
-		hashSet := make(map[int]bool)
-		for _, c := range candidates {
-			hashSet[tokenHashValue(c.Token, numSlots)] = true
-		}
-		for bitsToExtract > 0 && len(hashSet) < (1<<bitsToExtract) {
-			bitsToExtract--
-			numSlots = 1 << bitsToExtract
-			hashSet = make(map[int]bool)
-			for _, c := range candidates {
-				hashSet[tokenHashValue(c.Token, numSlots)] = true
-			}
-		}
-
-		// Find which candidate token matches the start of remainingText
+		// Find which distribution token matches the start of remainingText
 		matchedToken := ""
 		actualConsumed := ""
-		for _, cand := range candidates {
-			token := cand.Token
-			if strings.HasPrefix(remainingText, token) {
-				matchedToken = token
-				actualConsumed = token
+		for _, tok := range dist.Tokens {
+			if strings.HasPrefix(remainingText, tok.Token) {
+				matchedToken = tok.Token
+				actualConsumed = tok.Token
 				break
 			}
 			// Trimmed match only for the very first token (handles TrimSpace)
 			if allowTrimmed {
-				trimmedToken := strings.TrimLeft(token, " ")
-				if trimmedToken != token && trimmedToken != "" && strings.HasPrefix(remainingText, trimmedToken) {
-					matchedToken = token
+				trimmedToken := strings.TrimLeft(tok.Token, " ")
+				if trimmedToken != tok.Token && trimmedToken != "" && strings.HasPrefix(remainingText, trimmedToken) {
+					matchedToken = tok.Token
 					actualConsumed = trimmedToken
 					break
 				}
@@ -567,25 +496,22 @@ func (d *Decoder) decodeSegment(ctx context.Context, coverText string, instructi
 			break
 		}
 
-		if bitsToExtract > 0 {
-			hashVal := tokenHashValue(matchedToken, 1<<bitsToExtract)
-			bits := intToBits(hashVal, bitsToExtract)
-			extractedBits = append(extractedBits, bits...)
+		// Arithmetic decode step: recover bits from this token
+		if err := dec.DecodeStep(dist, matchedToken); err != nil {
+			return nil, fmt.Errorf("arithmetic decode step failed: %w", err)
 		}
 
 		// After first successful match, disable trimmed matching
 		allowTrimmed = false
 
 		// Advance past matched token
-		if actualConsumed != "" {
-			remainingText = strings.TrimPrefix(remainingText, actualConsumed)
-			assistantText.WriteString(matchedToken) // Use original token for prompt
-		}
+		remainingText = strings.TrimPrefix(remainingText, actualConsumed)
+		assistantText.WriteString(matchedToken) // Use original token for prompt
 		tokenCount++
 
 		// Once we have the 2-byte length prefix, compute expected total bits
-		if expectedTotalBits == 0 && len(extractedBits) >= 16 {
-			prefix := bitsToBytes(extractedBits[:16])
+		if expectedTotalBits == 0 && dec.BitsRecovered() >= 16 {
+			prefix := bitsToBytes(dec.Bits()[:16])
 			pLen := int(binary.BigEndian.Uint16(prefix))
 			if pLen > 0 && pLen <= MaxSecretLength {
 				expectedTotalBits = (2 + pLen) * 8
@@ -593,10 +519,13 @@ func (d *Decoder) decodeSegment(ctx context.Context, coverText string, instructi
 		}
 
 		// Safety limits
-		if tokenCount > 500 || len(extractedBits) > (MaxSecretLength+2)*8+100 {
+		if tokenCount > 500 || dec.BitsRecovered() > (MaxSecretLength+2)*8+PaddingBits+100 {
 			break
 		}
 	}
+
+	dec.Flush()
+	extractedBits := dec.Bits()
 
 	// Convert bits back to bytes
 	extractedBytes := bitsToBytes(extractedBits)
@@ -967,23 +896,6 @@ func extractChunk(text string) string {
 	return chunk
 }
 
-func getSeed(prompt string, variant int) int {
-	h := fnv.New32a()
-	h.Write([]byte(prompt))
-	h.Write([]byte{byte(variant)})
-	return int(h.Sum32())
-}
-
-// promptToSeed generates a deterministic seed from a prompt for reproducible LLM output
-// tokenHashValue maps a token string to a deterministic bit value in [0, numSlots).
-// This is used instead of candidate index to encode/decode bits, making the system
-// immune to GPU-caused candidate reordering between encode and decode.
-func tokenHashValue(token string, numSlots int) int {
-	h := fnv.New32a()
-	h.Write([]byte(token))
-	return int(h.Sum32()) % numSlots
-}
-
 func promptToSeed(prompt string) int {
 	h := fnv.New32a()
 	h.Write([]byte(prompt))
@@ -1019,25 +931,6 @@ func bitsToBytes(bits []bool) []byte {
 		bytes[i] = b
 	}
 	return bytes
-}
-
-func bitsToInt(bits []bool) int {
-	result := 0
-	for _, b := range bits {
-		result <<= 1
-		if b {
-			result |= 1
-		}
-	}
-	return result
-}
-
-func intToBits(n, numBits int) []bool {
-	bits := make([]bool, numBits)
-	for i := numBits - 1; i >= 0; i-- {
-		bits[numBits-1-i] = (n>>i)&1 == 1
-	}
-	return bits
 }
 
 func min(a, b int) int {
