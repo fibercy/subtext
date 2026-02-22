@@ -7,6 +7,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"hash/fnv"
+	"log"
 	"os"
 	"strings"
 	"unicode"
@@ -18,9 +19,9 @@ const (
 	// MaxSecretLength is the maximum encrypted payload length per segment in bytes
 	MaxSecretLength = 256
 	// TargetSegmentPayloadLength is the target encrypted payload size per generated cover segment.
-	// With arithmetic coding: 4 payload + 2 length prefix = 6 bytes = 48 bits.
-	// At ~1.5 bits/token avg ≈ 32 tokens per segment.
-	TargetSegmentPayloadLength = 4
+	// With arithmetic coding: 6 payload + 2 length prefix = 8 bytes = 64 bits.
+	// At ~1 bits/token avg ≈ 90-100 tokens per segment.
+	TargetSegmentPayloadLength = 6
 	// MaxSegmentEncodeAttempts is the max retries to regenerate a valid segment.
 	MaxSegmentEncodeAttempts = 12
 )
@@ -116,27 +117,32 @@ func (e *Encoder) encodeSegment(ctx context.Context, prompt string, encryptedPay
 	copy(payloadWithLen[2:], encryptedPayload)
 
 	bits := bytesToBits(payloadWithLen)
+	log.Printf("[stego] encodeSegment: %d bits to encode", len(bits))
 	for attempt := 1; attempt <= MaxSegmentEncodeAttempts; attempt++ {
 		attemptPrompt := prompt + promptVariation(attempt)
 		coverText, tokenCount, bitsEncoded, err := e.generateWithBits(ctx, attemptPrompt, bits)
 		if err != nil {
+			log.Printf("[stego] attempt %d: error: %v", attempt, err)
 			if attempt == MaxSegmentEncodeAttempts {
 				return "", 0, 0, 0, fmt.Errorf("generation failed: %w", err)
 			}
 			continue
 		}
 		if bitsEncoded != len(bits) {
+			log.Printf("[stego] attempt %d: incomplete %d/%d bits, %d tokens", attempt, bitsEncoded, len(bits), tokenCount)
 			if attempt == MaxSegmentEncodeAttempts {
 				return "", 0, 0, 0, fmt.Errorf("incomplete segment encoding: encoded %d of %d bits", bitsEncoded, len(bits))
 			}
 			continue
 		}
 		if !isValidCoverSegment(coverText) {
+			log.Printf("[stego] attempt %d: quality check failed: %q (reason: %s)", attempt, coverText[:min(80, len(coverText))], coverRejectReason(coverText))
 			if attempt == MaxSegmentEncodeAttempts {
 				return "", 0, 0, 0, fmt.Errorf("generated segment failed quality checks")
 			}
 			continue
 		}
+		log.Printf("[stego] attempt %d: OK, %d tokens, text=%q", attempt, tokenCount, coverText[:min(80, len(coverText))])
 		return coverText, len(bits), tokenCount, attempt, nil
 	}
 
@@ -158,7 +164,11 @@ func (e *Encoder) formatPrompt(instruction, assistantText string) string {
 // Both encoder and decoder detect EOS at the same position (same prompt → same logprobs)
 // and agree to insert/skip this marker without encoding/extracting bits.
 // Multiple markers are rotated to prevent the model from getting stuck in an EOS loop.
-var eosMarkers = []string{", ", " and ", " - ", ". ", " but "}
+var eosMarkers = []string{
+	", ", " and ", " - ", ". ", " but ",
+	"; ", " so ", " then ", " or ", " also ",
+	" -- ", " plus ", " anyway ", " yet ", " still ",
+}
 
 // promptVariation returns a small instruction suffix for retry attempts > 1.
 // Each variation changes the prompt hash → different seed → different logprobs →
@@ -281,11 +291,12 @@ func (e *Encoder) generateWithBits(ctx context.Context, instruction string, bits
 		result.WriteString(tailText)
 	}
 
-	bitsEncoded := enc.BitsConsumed()
-	if bitsEncoded > originalBitLen {
-		bitsEncoded = originalBitLen
+	if !enc.Done(originalBitLen) {
+		// Not enough tokens generated to push all bits through the AC pipeline.
+		// Report 0 bits so encodeSegment retries with a different prompt.
+		return strings.TrimSpace(result.String()), tokenCount, 0, nil
 	}
-	return strings.TrimSpace(result.String()), tokenCount, bitsEncoded, nil
+	return strings.TrimSpace(result.String()), tokenCount, originalBitLen, nil
 }
 
 // GenerateReply produces a plain (non-steganographic) conversational reply to a
@@ -400,6 +411,7 @@ func (d *Decoder) formatPrompt(instruction, assistantText string) string {
 
 func (d *Decoder) decodeSegment(ctx context.Context, coverText string, instruction string, attempt int) (*DecodeResult, error) {
 	instruction = instruction + promptVariation(attempt)
+	log.Printf("[stego-dec] decodeSegment: coverText=%d chars, attempt=%d", len(coverText), attempt)
 
 	dec := NewArithDecoder()
 	var assistantText strings.Builder // accumulated matched tokens
@@ -467,22 +479,22 @@ func (d *Decoder) decodeSegment(ctx context.Context, coverText string, instructi
 		// Build distribution (same canonical ordering as encoder)
 		dist := buildDistribution(candidates)
 
-		// Find which distribution token matches the start of remainingText
+		// Find the LONGEST distribution token matching the start of remainingText.
+		// Must use longest match because shorter tokens may be prefixes of the
+		// actual token the encoder selected (e.g. " H" vs " Heading").
 		matchedToken := ""
 		actualConsumed := ""
 		for _, tok := range dist.Tokens {
-			if strings.HasPrefix(remainingText, tok.Token) {
+			if strings.HasPrefix(remainingText, tok.Token) && len(tok.Token) > len(actualConsumed) {
 				matchedToken = tok.Token
 				actualConsumed = tok.Token
-				break
 			}
 			// Trimmed match only for the very first token (handles TrimSpace)
 			if allowTrimmed {
 				trimmedToken := strings.TrimLeft(tok.Token, " ")
-				if trimmedToken != tok.Token && trimmedToken != "" && strings.HasPrefix(remainingText, trimmedToken) {
+				if trimmedToken != tok.Token && trimmedToken != "" && strings.HasPrefix(remainingText, trimmedToken) && len(trimmedToken) > len(actualConsumed) {
 					matchedToken = tok.Token
 					actualConsumed = trimmedToken
-					break
 				}
 			}
 		}
@@ -526,17 +538,21 @@ func (d *Decoder) decodeSegment(ctx context.Context, coverText string, instructi
 
 	dec.Flush()
 	extractedBits := dec.Bits()
+	log.Printf("[stego-dec] recovered %d bits, %d tokens, remaining=%d chars", len(extractedBits), tokenCount, len(remainingText))
 
 	// Convert bits back to bytes
 	extractedBytes := bitsToBytes(extractedBits)
 	if len(extractedBytes) < 2 {
+		log.Printf("[stego-dec] not enough bytes: %d", len(extractedBytes))
 		return &DecodeResult{Valid: false}, nil
 	}
 
 	// Parse length prefix
 	payloadLen := int(binary.BigEndian.Uint16(extractedBytes[0:2]))
+	log.Printf("[stego-dec] length prefix=%d, available=%d", payloadLen, len(extractedBytes)-2)
 
 	if payloadLen > len(extractedBytes)-2 || payloadLen > MaxSecretLength {
+		log.Printf("[stego-dec] invalid length: %d (have %d bytes)", payloadLen, len(extractedBytes)-2)
 		return &DecodeResult{Valid: false}, nil
 	}
 
@@ -838,7 +854,7 @@ func isValidCoverSegment(text string) bool {
 
 	words := strings.Fields(text)
 	// Minimum reduced to 5 for smaller segment payloads
-	if len(words) < 5 || len(words) > 90 {
+	if len(words) < 5 || len(words) > 150 {
 		return false
 	}
 
@@ -862,6 +878,43 @@ func isValidCoverSegment(text string) bool {
 	}
 
 	return true
+}
+
+// coverRejectReason returns a short description of why the text fails quality checks (for logging).
+func coverRejectReason(text string) string {
+	text = strings.TrimSpace(text)
+	if text == "" {
+		return "empty"
+	}
+	if strings.Contains(text, segmentSeparator) {
+		return "contains separator"
+	}
+	if strings.Contains(text, "\n") || strings.Contains(text, "\r") {
+		return "multiline"
+	}
+	if strings.ContainsAny(text, "[]{}<>_") {
+		return fmt.Sprintf("bad char in []{}<>_")
+	}
+	if containsInvisible(text) {
+		return "invisible chars"
+	}
+	if !isASCIIOnly(text) {
+		return "non-ASCII"
+	}
+	words := strings.Fields(text)
+	if len(words) < 5 {
+		return fmt.Sprintf("too few words (%d)", len(words))
+	}
+	if len(words) > 150 {
+		return fmt.Sprintf("too many words (%d)", len(words))
+	}
+	lower := strings.ToLower(text)
+	for _, phrase := range []string{"write one sentence", "write a sentence", "hard rules", "output only", "this text", "no changes in punctuation", "optional argumentation", "include names", "instruction", "prompt"} {
+		if strings.Contains(lower, phrase) {
+			return fmt.Sprintf("bad phrase: %q", phrase)
+		}
+	}
+	return "unknown"
 }
 
 func extractChunk(text string) string {
