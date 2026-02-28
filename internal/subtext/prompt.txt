@@ -1,8 +1,8 @@
 Write one natural everyday text message about {{TOPIC}}.
 Hard rules:
 - ENGLISH ONLY - no other languages at all
-- 3 to 5 casual sentences
-- 40 to 70 words total
+- 1 to 3 casual sentences
+- 15 to 40 words total
 - plain conversational English, mostly lowercase
 - mundane and specific (like normal daily life)
 - no bullets, no lists, no quotes

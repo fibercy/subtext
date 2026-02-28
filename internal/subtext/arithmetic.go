@@ -27,7 +27,8 @@ const (
 	// PaddingBits is extra padding after the message to ensure all message bits
 	// are pushed out of the encoder's value register into the token stream.
 	// Alternating 1/0 padding prevents the value register from stalling.
-	PaddingBits = 2 * PrecisionBits
+	// PrecisionBits+8 gives safety margin beyond the theoretical minimum.
+	PaddingBits = PrecisionBits + 8
 )
 
 // CandidateToken is a token with its quantized weight and cumulative range [CumStart, CumEnd).

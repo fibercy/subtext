@@ -2,7 +2,6 @@ package subtext
 
 import (
 	"context"
-	"encoding/binary"
 	"fmt"
 	"os"
 	"strings"
@@ -27,10 +26,10 @@ func TestArithmeticLLMRoundTrip(t *testing.T) {
 	// Use a small payload: 4 bytes = 1 segment
 	payload := []byte{0xDE, 0xAD, 0xBE, 0xEF}
 
-	// Add 2-byte length prefix
-	payloadWithLen := make([]byte, 2+len(payload))
-	binary.BigEndian.PutUint16(payloadWithLen[0:2], uint16(len(payload)))
-	copy(payloadWithLen[2:], payload)
+	// Add 1-byte length prefix
+	payloadWithLen := make([]byte, 1+len(payload))
+	payloadWithLen[0] = byte(len(payload))
+	copy(payloadWithLen[1:], payload)
 	bits := bytesToBits(payloadWithLen)
 	t.Logf("payload bits: %d bits", len(bits))
 
@@ -220,18 +219,18 @@ func TestArithmeticLLMRoundTrip(t *testing.T) {
 	t.Logf("\nTotal bits recovered: %d", len(extractedBits))
 
 	extractedBytes := bitsToBytes(extractedBits)
-	if len(extractedBytes) < 2 {
+	if len(extractedBytes) < 1 {
 		t.Fatalf("not enough bytes: %d", len(extractedBytes))
 	}
 
-	pLen := int(binary.BigEndian.Uint16(extractedBytes[0:2]))
+	pLen := int(extractedBytes[0])
 	t.Logf("Decoded length prefix: %d", pLen)
 
-	if pLen > len(extractedBytes)-2 || pLen > MaxSecretLength {
-		t.Fatalf("invalid length: %d (have %d bytes)", pLen, len(extractedBytes)-2)
+	if pLen > len(extractedBytes)-1 || pLen > MaxSecretLength {
+		t.Fatalf("invalid length: %d (have %d bytes)", pLen, len(extractedBytes)-1)
 	}
 
-	recovered := extractedBytes[2 : 2+pLen]
+	recovered := extractedBytes[1 : 1+pLen]
 	t.Logf("Recovered payload: %x", recovered)
 	t.Logf("Original payload:  %x", payload)
 

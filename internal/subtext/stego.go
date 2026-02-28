@@ -4,7 +4,6 @@ package subtext
 import (
 	"context"
 	"crypto/rand"
-	"encoding/binary"
 	"fmt"
 	"hash/fnv"
 	"log"
@@ -20,8 +19,8 @@ const (
 	// MaxSecretLength is the maximum encrypted payload length per segment in bytes
 	MaxSecretLength = 256
 	// TargetSegmentPayloadLength is the target encrypted payload size per generated cover segment.
-	// Larger segments amortize the fixed 64-bit AC padding overhead better.
-	// With arithmetic coding: 20 payload + 2 length prefix = 22 bytes = 176 bits + 64 padding.
+	// Larger segments amortize the fixed 32-bit AC padding overhead better.
+	// With arithmetic coding: 20 payload + 1 length prefix = 21 bytes = 168 bits + 32 padding.
 	// Short messages (< 20 bytes encrypted) fit in a single segment.
 	TargetSegmentPayloadLength = 20
 	// MaxSegmentEncodeAttempts is the max retries to regenerate a valid segment.
@@ -113,10 +112,11 @@ func (e *Encoder) encodeSegment(ctx context.Context, prompt string, encryptedPay
 		return "", 0, 0, 0, fmt.Errorf("payload too large: %d bytes (max %d)", len(encryptedPayload), MaxSecretLength)
 	}
 
-	// Add a 2-byte length prefix so each segment can be decoded independently.
-	payloadWithLen := make([]byte, 2+len(encryptedPayload))
-	binary.BigEndian.PutUint16(payloadWithLen[0:2], uint16(len(encryptedPayload)))
-	copy(payloadWithLen[2:], encryptedPayload)
+	// Add a 1-byte length prefix so each segment can be decoded independently.
+	// Max segment payload is TargetSegmentPayloadLength (20), so uint8 suffices.
+	payloadWithLen := make([]byte, 1+len(encryptedPayload))
+	payloadWithLen[0] = byte(len(encryptedPayload))
+	copy(payloadWithLen[1:], encryptedPayload)
 
 	bits := bytesToBits(payloadWithLen)
 	log.Printf("[stego] encodeSegment: %d bits to encode", len(bits))
@@ -523,17 +523,17 @@ func (d *Decoder) decodeSegment(ctx context.Context, coverText string, instructi
 		assistantText.WriteString(matchedToken) // Use original token for prompt
 		tokenCount++
 
-		// Once we have the 2-byte length prefix, compute expected total bits
-		if expectedTotalBits == 0 && dec.BitsRecovered() >= 16 {
-			prefix := bitsToBytes(dec.Bits()[:16])
-			pLen := int(binary.BigEndian.Uint16(prefix))
+		// Once we have the 1-byte length prefix, compute expected total bits
+		if expectedTotalBits == 0 && dec.BitsRecovered() >= 8 {
+			prefix := bitsToBytes(dec.Bits()[:8])
+			pLen := int(prefix[0])
 			if pLen > 0 && pLen <= MaxSecretLength {
-				expectedTotalBits = (2 + pLen) * 8
+				expectedTotalBits = (1 + pLen) * 8
 			}
 		}
 
 		// Safety limits
-		if tokenCount > 500 || dec.BitsRecovered() > (MaxSecretLength+2)*8+PaddingBits+100 {
+		if tokenCount > 500 || dec.BitsRecovered() > (MaxSecretLength+1)*8+PaddingBits+100 {
 			break
 		}
 	}
@@ -544,21 +544,21 @@ func (d *Decoder) decodeSegment(ctx context.Context, coverText string, instructi
 
 	// Convert bits back to bytes
 	extractedBytes := bitsToBytes(extractedBits)
-	if len(extractedBytes) < 2 {
+	if len(extractedBytes) < 1 {
 		log.Printf("[stego-dec] not enough bytes: %d", len(extractedBytes))
 		return &DecodeResult{Valid: false}, nil
 	}
 
-	// Parse length prefix
-	payloadLen := int(binary.BigEndian.Uint16(extractedBytes[0:2]))
-	log.Printf("[stego-dec] length prefix=%d, available=%d", payloadLen, len(extractedBytes)-2)
+	// Parse 1-byte length prefix
+	payloadLen := int(extractedBytes[0])
+	log.Printf("[stego-dec] length prefix=%d, available=%d", payloadLen, len(extractedBytes)-1)
 
-	if payloadLen > len(extractedBytes)-2 || payloadLen > MaxSecretLength {
-		log.Printf("[stego-dec] invalid length: %d (have %d bytes)", payloadLen, len(extractedBytes)-2)
+	if payloadLen > len(extractedBytes)-1 || payloadLen > MaxSecretLength {
+		log.Printf("[stego-dec] invalid length: %d (have %d bytes)", payloadLen, len(extractedBytes)-1)
 		return &DecodeResult{Valid: false}, nil
 	}
 
-	payload := extractedBytes[2 : 2+payloadLen]
+	payload := extractedBytes[1 : 1+payloadLen]
 
 	// Validity is determined by successful decryption (compact crypto has integrity check)
 	return &DecodeResult{
@@ -584,8 +584,8 @@ func buildPrompt(topic string) string {
 	// Fallback to embedded prompt
 	return fmt.Sprintf(`Write one natural everyday text message about %s.
 Hard rules:
-- 1 to 2 short sentences only
-- 12 to 28 words total
+- 1 to 3 casual sentences
+- 15 to 40 words total
 - plain conversational English, mostly lowercase
 - mundane and specific (like normal daily life)
 - no bullets, no lists, no quotes

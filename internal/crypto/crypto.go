@@ -150,8 +150,8 @@ func DecryptWithKey(key, ciphertext []byte) ([]byte, error) {
 
 // Compact encryption constants - reduced overhead for steganography
 const (
-	CompactNonceSize = 8 // 8-byte nonce (64-bit counter space)
-	CompactTagSize   = 8 // 8-byte truncated HMAC
+	CompactNonceSize = 4 // 4-byte nonce (birthday bound ~65K per key, sufficient for chat)
+	CompactTagSize   = 4 // 4-byte truncated HMAC (1 in 2^32 forgery probability)
 )
 
 // CompactEncrypt encrypts with minimal overhead using AES-CTR + truncated HMAC

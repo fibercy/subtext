@@ -6,8 +6,10 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
+	"github.com/cy/subtext/internal/crypto"
 	"github.com/cy/subtext/internal/llm"
 	"github.com/cy/subtext/internal/subtext"
 )
@@ -40,33 +42,70 @@ func main() {
 	enc := subtext.NewEncoder(client)
 	dec := subtext.NewDecoder(client)
 
-	// Test with small payload: exactly 4 bytes (=> 6 bytes with prefix => 48 bits)
-	payload := []byte{0xDE, 0xAD, 0xBE, 0xEF}
-	fmt.Printf("Payload: %s (%d bytes)\n", hex.EncodeToString(payload), len(payload))
-
-	// Encode
-	result, err := enc.Encode(ctx, payload, "fitness")
-	if err != nil {
-		log.Fatalf("encode: %v", err)
+	// Test cases: raw bytes and real encrypted messages
+	testCases := []struct {
+		name    string
+		payload []byte
+		topic   string
+	}{
+		{"4 bytes raw", []byte{0xDE, 0xAD, 0xBE, 0xEF}, "fitness"},
 	}
 
-	fmt.Printf("\nCover text (%d bits, %d tokens):\n%s\n", result.BitsEncoded, result.TokenCount, result.CoverText)
-
-	// Decode
-	decoded, err := dec.Decode(ctx, result.CoverText, "fitness")
-	if err != nil {
-		log.Fatalf("decode: %v", err)
+	// Add real encrypted message tests
+	dummyKey := make([]byte, 32)
+	for i := range dummyKey {
+		dummyKey[i] = byte(i)
 	}
 
-	fmt.Printf("\nDecode valid: %v\n", decoded.Valid)
-	if decoded.Valid {
-		fmt.Printf("Decoded payload: %s\n", hex.EncodeToString(decoded.EncryptedPayload))
-		if hex.EncodeToString(decoded.EncryptedPayload) == hex.EncodeToString(payload) {
+	messages := []struct {
+		name string
+		text string
+	}{
+		{"short msg", "hi"},
+		{"medium msg", "meet me at 3pm"},
+		{"long msg", "meet me at the coffee shop on 5th street tomorrow at 3pm"},
+	}
+
+	for _, msg := range messages {
+		encrypted, err := crypto.CompactEncrypt(dummyKey, []byte(msg.text))
+		if err != nil {
+			log.Fatalf("encrypt %s: %v", msg.name, err)
+		}
+		testCases = append(testCases, struct {
+			name    string
+			payload []byte
+			topic   string
+		}{
+			fmt.Sprintf("%s (%d chars -> %d bytes encrypted)", msg.name, len(msg.text), len(encrypted)),
+			encrypted,
+			"casual chat",
+		})
+	}
+
+	for _, tc := range testCases {
+		fmt.Printf("\n%s\n%s\n", tc.name, strings.Repeat("=", 60))
+		fmt.Printf("Payload: %s (%d bytes)\n", hex.EncodeToString(tc.payload), len(tc.payload))
+
+		result, err := enc.Encode(ctx, tc.payload, tc.topic)
+		if err != nil {
+			log.Printf("encode %s: %v", tc.name, err)
+			continue
+		}
+
+		words := strings.Fields(result.CoverText)
+		fmt.Printf("\nCover text (%d bits, %d tokens, %d chars, %d words):\n%s\n",
+			result.BitsEncoded, result.TokenCount, len(result.CoverText), len(words), result.CoverText)
+
+		decoded, err := dec.Decode(ctx, result.CoverText, tc.topic)
+		if err != nil {
+			log.Printf("decode %s: %v", tc.name, err)
+			continue
+		}
+
+		if decoded.Valid && hex.EncodeToString(decoded.EncryptedPayload) == hex.EncodeToString(tc.payload) {
 			fmt.Println("✅ Round-trip SUCCESS!")
 		} else {
-			fmt.Println("❌ Round-trip MISMATCH")
+			fmt.Printf("❌ FAIL (valid=%v, got=%s)\n", decoded.Valid, hex.EncodeToString(decoded.EncryptedPayload))
 		}
-	} else {
-		fmt.Println("❌ Decode invalid")
 	}
 }
