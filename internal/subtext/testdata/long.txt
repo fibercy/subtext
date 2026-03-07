@@ -1,0 +1,38 @@
+Secret:    meet me at the coffee shop on 5th street tomorrow at 3pm
+Encrypted: 99e05fd924849c0d7c1d7b85f36838694d426c588409eed8235d11c73c2366d7d13aaaf20d9ef7ef4c441bfb298060d755d0750ae122e3c92748d918409b6747 (64 bytes)
+Topic:     weekend plans
+Segments:  7
+Tokens:    221
+Chars:     1180
+Words:     198
+Attempt:   1
+
+--- Cover Text ---
+Hey Sarah. Just finalized our lunch Saturday downtown at noon near City Square if rain, then it's pizza. Otherwise headed for Riverside State Park.
+
+---SEG---
+
+sounds perfect; will grab your slice at Pie Station. Weather predicts sunshine tomorrow fingers crossed :cross: removed for no icons and 1 natural thread.
+
+---SEG---
+
+guess ill see ye at Pie around Noon then? wanna hit that park if temps reach eighty hopefully there will finally buds appearing on that cherry blossom over by the lake.
+
+---SEG---
+
+Sounds perfect for both me! Enjoy meeting noon, take some photos at bloom spotting :D and  let's hope for sunshine rather than clouds. but  the trail is nice rain or shine.
+
+---SEG---
+
+great lets stay hopeful for a sunny trail day. ill text your latest photos tomorrow. have rest good one buddy and  nice dreams! but  yeah same time works perfectly for both of us.
+
+---SEG---
+
+gon Na grab morning brunch SAT if yer around feel relaxed and casual. later! and sweet dreams again pal. but ican't waits sunny or not trails gonna hit somehow hbu?
+
+---SEG---
+
+sounds good for morning Saturday brunch. let us both head for the trails later afternoon hopefully weather stays nice.
+
+--- Recovered ---
+meet me at the coffee shop on 5th street tomorrow at 3pm

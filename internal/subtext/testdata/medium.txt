@@ -1,0 +1,22 @@
+Secret:    meet me at 3pm
+Encrypted: dd0275330806353d6c68c580cef7f71d3e16df21df9c (22 bytes)
+Topic:     casual chat
+Segments:  3
+Tokens:    91
+Chars:     447
+Words:     80
+Attempt:   2
+
+--- Cover Text ---
+Hey Mike! Heard it raining really loudly last nuit. Can you make it downtown for lunch tomorrow around noon? and 1 wants sandwiches! but 2 prefer sushi, let me know if you have a preference.
+
+---SEG---
+
+SURE john, noon sounds Good. I Dont have strongly Either So wherever's cool With ME. hopefully, SEE you Then ! and ican bring cash for both Options if that helps.
+
+---SEG---
+
+cool john hoped everything went fine for ure this morning see u soon!
+
+--- Recovered ---
+meet me at 3pm

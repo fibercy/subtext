@@ -1,0 +1,14 @@
+Secret:    hi
+Encrypted: b47c49e61c1194e5582b (10 bytes)
+Topic:     casual chat
+Segments:  1
+Tokens:    30
+Chars:     147
+Words:     26
+Attempt:   1
+
+--- Cover Text ---
+Hey Mark, seen the newest exhibit at the planet museum opened recently, really cool stuff there and thought you might have liked it too. Are going?
+
+--- Recovered ---
+hi

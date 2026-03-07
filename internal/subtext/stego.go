@@ -4,7 +4,6 @@ package subtext
 import (
 	"context"
 	"crypto/rand"
-	"encoding/binary"
 	"fmt"
 	"hash/fnv"
 	"log"
@@ -20,10 +19,10 @@ const (
 	// MaxSecretLength is the maximum encrypted payload length per segment in bytes
 	MaxSecretLength = 256
 	// TargetSegmentPayloadLength is the target encrypted payload size per generated cover segment.
-	// Larger segments amortize the fixed 64-bit AC padding overhead better.
-	// With arithmetic coding: 20 payload + 2 length prefix = 22 bytes = 176 bits + 64 padding.
-	// Short messages (< 20 bytes encrypted) fit in a single segment.
-	TargetSegmentPayloadLength = 20
+	// Smaller segments produce shorter, more natural cover text at the cost of more segments.
+	// With arithmetic coding: 10 payload + 1 length prefix = 11 bytes = 88 bits + 40 padding.
+	// Each segment produces ~25-30 tokens of natural-sounding text.
+	TargetSegmentPayloadLength = 10
 	// MaxSegmentEncodeAttempts is the max retries to regenerate a valid segment.
 	MaxSegmentEncodeAttempts = 12
 )
@@ -113,10 +112,11 @@ func (e *Encoder) encodeSegment(ctx context.Context, prompt string, encryptedPay
 		return "", 0, 0, 0, fmt.Errorf("payload too large: %d bytes (max %d)", len(encryptedPayload), MaxSecretLength)
 	}
 
-	// Add a 2-byte length prefix so each segment can be decoded independently.
-	payloadWithLen := make([]byte, 2+len(encryptedPayload))
-	binary.BigEndian.PutUint16(payloadWithLen[0:2], uint16(len(encryptedPayload)))
-	copy(payloadWithLen[2:], encryptedPayload)
+	// Add a 1-byte length prefix so each segment can be decoded independently.
+	// Max segment payload is TargetSegmentPayloadLength (20), so uint8 suffices.
+	payloadWithLen := make([]byte, 1+len(encryptedPayload))
+	payloadWithLen[0] = byte(len(encryptedPayload))
+	copy(payloadWithLen[1:], encryptedPayload)
 
 	bits := bytesToBits(payloadWithLen)
 	log.Printf("[stego] encodeSegment: %d bits to encode", len(bits))
@@ -144,6 +144,14 @@ func (e *Encoder) encodeSegment(ctx context.Context, prompt string, encryptedPay
 			}
 			continue
 		}
+		// LLM-based quality check: ask the model if the text reads like natural English conversation
+		if !e.isNaturalText(ctx, coverText) {
+			log.Printf("[stego] attempt %d: LLM rejected as unnatural: %q", attempt, coverText[:min(80, len(coverText))])
+			if attempt == MaxSegmentEncodeAttempts {
+				return "", 0, 0, 0, fmt.Errorf("generated segment rejected by LLM quality check")
+			}
+			continue
+		}
 		log.Printf("[stego] attempt %d: OK, %d tokens, text=%q", attempt, tokenCount, coverText[:min(80, len(coverText))])
 		return coverText, len(bits), tokenCount, attempt, nil
 	}
@@ -162,14 +170,38 @@ func (e *Encoder) formatPrompt(instruction, assistantText string) string {
 	return instruction + assistantText
 }
 
+// isNaturalText calls the LLM to check whether the generated cover text reads
+// like a natural everyday English text message. Returns true if the LLM considers
+// the text natural, false if it looks garbled or machine-generated.
+// On LLM error, returns true so encoding isn't blocked.
+func (e *Encoder) isNaturalText(ctx context.Context, text string) bool {
+	instruction := fmt.Sprintf(`Read this text message and decide if it sounds like something a real person would text a friend. Answer only "yes" or "no".
+
+Text: %s
+Answer:`, text)
+
+	prompt := e.formatPrompt(instruction, "")
+	resp, err := e.llmClient.Generate(ctx, prompt, llm.GenerateOptions{
+		Temperature: 0.1,
+		NumPredict:  3,
+	}, false)
+	if err != nil {
+		log.Printf("[stego] LLM quality check error: %v", err)
+		return true // don't block on LLM error
+	}
+
+	answer := strings.ToLower(strings.TrimSpace(resp.Response))
+	return strings.HasPrefix(answer, "yes")
+}
+
 // eosMarkers are continuation tokens inserted when the model hits EOS mid-encoding.
 // Both encoder and decoder detect EOS at the same position (same prompt → same logprobs)
 // and agree to insert/skip this marker without encoding/extracting bits.
 // Multiple markers are rotated to prevent the model from getting stuck in an EOS loop.
 var eosMarkers = []string{
-	", ", " and ", " - ", ". ", " but ",
-	"; ", " so ", " then ", " or ", " also ",
-	" -- ", " plus ", " anyway ", " yet ", " still ",
+	" and ", " but ", " so ", " then ", " or ",
+	" also ", " plus ", " anyway ", " yet ", " still ",
+	" maybe ", " though ", " really ", " actually ", " honestly ",
 }
 
 // promptVariation returns a small instruction suffix for retry attempts > 1.
@@ -523,17 +555,17 @@ func (d *Decoder) decodeSegment(ctx context.Context, coverText string, instructi
 		assistantText.WriteString(matchedToken) // Use original token for prompt
 		tokenCount++
 
-		// Once we have the 2-byte length prefix, compute expected total bits
-		if expectedTotalBits == 0 && dec.BitsRecovered() >= 16 {
-			prefix := bitsToBytes(dec.Bits()[:16])
-			pLen := int(binary.BigEndian.Uint16(prefix))
+		// Once we have the 1-byte length prefix, compute expected total bits
+		if expectedTotalBits == 0 && dec.BitsRecovered() >= 8 {
+			prefix := bitsToBytes(dec.Bits()[:8])
+			pLen := int(prefix[0])
 			if pLen > 0 && pLen <= MaxSecretLength {
-				expectedTotalBits = (2 + pLen) * 8
+				expectedTotalBits = (1 + pLen) * 8
 			}
 		}
 
 		// Safety limits
-		if tokenCount > 500 || dec.BitsRecovered() > (MaxSecretLength+2)*8+PaddingBits+100 {
+		if tokenCount > 500 || dec.BitsRecovered() > (MaxSecretLength+1)*8+PaddingBits+100 {
 			break
 		}
 	}
@@ -544,21 +576,21 @@ func (d *Decoder) decodeSegment(ctx context.Context, coverText string, instructi
 
 	// Convert bits back to bytes
 	extractedBytes := bitsToBytes(extractedBits)
-	if len(extractedBytes) < 2 {
+	if len(extractedBytes) < 1 {
 		log.Printf("[stego-dec] not enough bytes: %d", len(extractedBytes))
 		return &DecodeResult{Valid: false}, nil
 	}
 
-	// Parse length prefix
-	payloadLen := int(binary.BigEndian.Uint16(extractedBytes[0:2]))
-	log.Printf("[stego-dec] length prefix=%d, available=%d", payloadLen, len(extractedBytes)-2)
+	// Parse 1-byte length prefix
+	payloadLen := int(extractedBytes[0])
+	log.Printf("[stego-dec] length prefix=%d, available=%d", payloadLen, len(extractedBytes)-1)
 
-	if payloadLen > len(extractedBytes)-2 || payloadLen > MaxSecretLength {
-		log.Printf("[stego-dec] invalid length: %d (have %d bytes)", payloadLen, len(extractedBytes)-2)
+	if payloadLen > len(extractedBytes)-1 || payloadLen > MaxSecretLength {
+		log.Printf("[stego-dec] invalid length: %d (have %d bytes)", payloadLen, len(extractedBytes)-1)
 		return &DecodeResult{Valid: false}, nil
 	}
 
-	payload := extractedBytes[2 : 2+payloadLen]
+	payload := extractedBytes[1 : 1+payloadLen]
 
 	// Validity is determined by successful decryption (compact crypto has integrity check)
 	return &DecodeResult{
@@ -584,12 +616,15 @@ func buildPrompt(topic string) string {
 	// Fallback to embedded prompt
 	return fmt.Sprintf(`Write one natural everyday text message about %s.
 Hard rules:
-- 1 to 2 short sentences only
-- 12 to 28 words total
-- plain conversational English, mostly lowercase
+- 1 to 3 casual sentences
+- 15 to 40 words total
+- use full standard English words, no abbreviations or texting slang
+- plain conversational tone, mostly lowercase
 - mundane and specific (like normal daily life)
 - no bullets, no lists, no quotes
 - no brackets or parentheses
+- no emojis, emoticons, or special characters
+- no hyphens connecting words
 - no explanations about style or generation
 - output only the message text
 	`, topic)
@@ -647,21 +682,35 @@ func filterCoverCandidates(candidates []llm.LogprobToken) []llm.LogprobToken {
 	return makePrefixFree(filtered)
 }
 
-// filterSpaceAware enforces natural spacing between words. When the last
-// character of the generated text is a letter or digit, only keep candidates
-// that start with a space or punctuation (to avoid concatenated words like
-// "supposedtobe12"). Both encoder and decoder call this identically so they
-// agree on the candidate set.
+// filterSpaceAware enforces natural spacing and punctuation rules.
+// - After a letter/digit: only allow tokens starting with space or punctuation
+//   (prevents "supposedtobe12")
+// - After punctuation: only allow tokens starting with a space
+//   (prevents "?,." "!," and period-separated fragments like "works.for.us")
+// Both encoder and decoder call this identically so they agree on the candidate set.
 func filterSpaceAware(candidates []llm.LogprobToken, lastChar byte) []llm.LogprobToken {
-	if !isLetterOrDigit(lastChar) {
+	var filtered []llm.LogprobToken
+
+	if isPunctuation(lastChar) {
+		// After punctuation, only allow space-prefixed tokens
+		filtered = make([]llm.LogprobToken, 0, len(candidates))
+		for _, c := range candidates {
+			if len(c.Token) > 0 && c.Token[0] == ' ' {
+				filtered = append(filtered, c)
+			}
+		}
+	} else if isLetterOrDigit(lastChar) {
+		// After letter/digit, allow space or punctuation
+		filtered = make([]llm.LogprobToken, 0, len(candidates))
+		for _, c := range candidates {
+			if len(c.Token) > 0 && (c.Token[0] == ' ' || isPunctuation(c.Token[0])) {
+				filtered = append(filtered, c)
+			}
+		}
+	} else {
 		return candidates
 	}
-	filtered := make([]llm.LogprobToken, 0, len(candidates))
-	for _, c := range candidates {
-		if len(c.Token) > 0 && (c.Token[0] == ' ' || isPunctuation(c.Token[0])) {
-			filtered = append(filtered, c)
-		}
-	}
+
 	if len(filtered) == 0 {
 		return candidates // fallback: don't starve encoding
 	}
@@ -720,7 +769,7 @@ func isAllowedCoverToken(token string) bool {
 	if token == "" {
 		return false
 	}
-	if strings.ContainsAny(token, "\n\r\t[]{}<>_") {
+	if strings.ContainsAny(token, "\n\r\t[]{}<>_\\$@#/\"&()+") {
 		return false
 	}
 	if containsInvisible(token) {
@@ -732,20 +781,175 @@ func isAllowedCoverToken(token string) bool {
 	}
 
 	trimmed := strings.ToLower(strings.TrimSpace(token))
-	badToken := map[string]struct{}{
-		"note":         {},
-		"instruction":  {},
-		"instructions": {},
-		"prompt":       {},
-		"rules":        {},
-	}
-	if _, found := badToken[trimmed]; found {
+	if isBadToken(trimmed) {
 		return false
 	}
 	if strings.HasPrefix(trimmed, "write") {
 		return false
 	}
 
+	// Reject tokens with internal hyphens (e.g. "told-me", "at-work")
+	word := strings.TrimSpace(token)
+	if len(word) > 1 && strings.Contains(word[1:len(word)-1], "-") {
+		return false
+	}
+
+	// Reject emoticon-like patterns
+	if strings.ContainsAny(token, ":;") && strings.ContainsAny(token, ")(DP") {
+		return false
+	}
+	// Reject repeated punctuation like ":))", "??", "!!", "..."
+	if len(trimmed) >= 2 && !hasVowel(trimmed) && !hasConsonant(trimmed) {
+		return false
+	}
+	// Reject tokens with punctuation glued to a letter (e.g. ".good", ".me", ",then")
+	// These create unnatural period-separated words like "sounds.good to.me"
+	if hasPunctuationGlue(word) {
+		return false
+	}
+
+	// Reject consonant-only words (catches "tty", "nx", "gd", "tm" etc.)
+	if len(trimmed) >= 2 && !hasVowel(trimmed) && isAlphaOnly(trimmed) {
+		return false
+	}
+
+	// Reject camelCase/PascalCase tokens (code identifiers like "URLException",
+	// "forIndexPath", "AppCompatActivity", "istringstream")
+	if isCamelCase(word) {
+		return false
+	}
+
+	return true
+}
+
+// badTokenSet contains words to reject: prompt-leaking terms, non-English Latin-script
+// words that Qwen generates (Italian, German, Spanish, French, Indonesian, etc.),
+// and other artifacts. All entries must be lowercase.
+var badTokenSet = map[string]bool{
+	// Prompt leaking
+	"note": true, "instruction": true, "instructions": true,
+	"prompt": true, "rules": true, "response": true,
+	// Italian
+	"oggi": true, "anche": true, "cosa": true, "sono": true, "tutto": true,
+	"bene": true, "grazie": true, "ciao": true, "molto": true, "questo": true,
+	"quella": true, "quando": true, "sempre": true, "dopo": true, "prima": true,
+	"allora": true, "adesso": true, "perche": true, "senza": true, "ancora": true,
+	"tanto": true, "ogni": true, "stesso": true,
+	// German
+	"auch": true, "nicht": true, "aber": true, "haben": true, "oder": true,
+	"noch": true, "schon": true, "jetzt": true, "dann": true, "mein": true,
+	"dein": true, "sein": true, "wir": true, "ihr": true, "kann": true,
+	"wird": true, "ganz": true, "immer": true, "etwas": true, "viel": true,
+	"hier": true, "dort": true, "heute": true, "morgen": true, "gestern": true,
+	"danke": true, "bitte": true, "nein": true, "und": true,
+	"mutter": true, "vater": true, "kinder": true,
+	// Spanish
+	"nuevo": true, "como": true, "pero": true, "esta": true, "este": true,
+	"para": true, "desde": true, "bien": true, "mucho": true, "poco": true,
+	"cuando": true, "donde": true, "antes": true, "ahora": true, "despues": true,
+	"siempre": true, "nunca": true, "hola": true, "bueno": true,
+	"proyecto": true, "cuidalo": true, "minutos": true, "ebenfalls": true,
+	// French
+	"avec": true, "pour": true, "dans": true, "chez": true, "cette": true,
+	"mais": true, "aussi": true, "tres": true, "tout": true, "comme": true,
+	"fait": true, "jour": true, "soir": true, "matin": true,
+	"merci": true, "bonjour": true, "mieux": true, "peut": true,
+	"nuit": true, "oui": true, "voila": true, "rien": true,
+	"hacia": true, "mejor": true, "alors": true, "toujours": true,
+	"tarde": true, "casa": true, "autour": true, "vous": true,
+	// Indonesian / Malay
+	"lagi": true, "juga": true, "sudah": true, "akan": true, "dari": true,
+	"dengan": true, "untuk": true, "yang": true, "bisa": true, "harus": true,
+	"tentang": true, "echang": true, "saja": true,
+	// Portuguese
+	"tambem": true, "agora": true, "muito": true, "depois": true,
+	// Dutch
+	"ook": true, "maar": true, "nog": true, "heel": true, "niet": true,
+	"filmpjes": true, "nederland": true, "rotterdam": true,
+	// Nordic (seen in outputs)
+	"oslo": true, "odense": true, "limburg": true, "wenn": true,
+	// Code / tech artifacts
+	"url": true, "http": true, "html": true, "json": true,
+	"api": true, "sql": true, "css": true, "err": true,
+	"btn": true, "img": true, "div": true, "src": true,
+	"def": true, "var": true, "int": true, "str": true,
+	"nil": true, "null": true, "void": true, "bool": true,
+	"func": true, "enum": true, "struct": true, "class": true,
+	"async": true, "await": true, "const": true, "extern": true,
+	"stdin": true, "stdout": true, "stderr": true,
+	"ttyl": true, "ily": true, "imo": true, "tbh": true,
+	"idk": true, "omg": true, "smh": true, "brb": true,
+	"lmao": true, "rofl": true, "ftw": true, "fyi": true,
+	"urs": true, "abs": true, "lol": true, "haha": true,
+}
+
+// isBadToken checks if a lowercase-trimmed token is in the blocklist.
+func isBadToken(s string) bool {
+	return badTokenSet[s]
+}
+
+// isCamelCase returns true if s looks like a code identifier:
+// a lowercase letter immediately followed by an uppercase letter (camelCase),
+// or an all-lowercase word longer than 10 chars with no spaces (likely code like "istringstream").
+func isCamelCase(s string) bool {
+	for i := 1; i < len(s); i++ {
+		if s[i-1] >= 'a' && s[i-1] <= 'z' && s[i] >= 'A' && s[i] <= 'Z' {
+			return true
+		}
+	}
+	// Long all-lowercase single words are likely code identifiers
+	if len(s) > 10 && isAlphaOnly(s) && strings.ToLower(s) == s {
+		return true
+	}
+	return false
+}
+
+// hasVowel returns true if the string contains at least one vowel.
+func hasVowel(s string) bool {
+	for _, c := range strings.ToLower(s) {
+		switch c {
+		case 'a', 'e', 'i', 'o', 'u', 'y':
+			return true
+		}
+	}
+	return false
+}
+
+// hasPunctuationGlue returns true if the token has punctuation glued directly
+// to a letter without space. Catches tokens like ".good", ",then", ".me" that
+// create unnatural period-separated text like "sounds.good to.me".
+// Apostrophes are excluded since contractions like "'s", "'t", "'m" are natural.
+func hasPunctuationGlue(s string) bool {
+	for i := 0; i < len(s)-1; i++ {
+		if s[i] != '\'' && isPunctuation(s[i]) && isLetterOrDigit(s[i+1]) {
+			return true
+		}
+	}
+	return false
+}
+
+// hasConsonant returns true if the string contains at least one consonant.
+func hasConsonant(s string) bool {
+	for _, c := range strings.ToLower(s) {
+		if c >= 'a' && c <= 'z' {
+			switch c {
+			case 'a', 'e', 'i', 'o', 'u', 'y':
+				continue
+			default:
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// isAlphaOnly returns true if the string contains only ASCII letters.
+func isAlphaOnly(s string) bool {
+	for _, c := range s {
+		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+			return false
+		}
+	}
 	return true
 }
 
@@ -891,7 +1095,25 @@ func isValidCoverSegment(text string) bool {
 		}
 	}
 
+	// Reject text with excessive word repetition (e.g. "filmpjes filmpjes filmpjes...")
+	if hasExcessiveRepetition(words) {
+		return false
+	}
+
 	return true
+}
+
+// hasExcessiveRepetition returns true if any word appears more than 3 times.
+func hasExcessiveRepetition(words []string) bool {
+	counts := make(map[string]int)
+	for _, w := range words {
+		w = strings.ToLower(w)
+		counts[w]++
+		if counts[w] > 3 {
+			return true
+		}
+	}
+	return false
 }
 
 // coverRejectReason returns a short description of why the text fails quality checks (for logging).
@@ -927,6 +1149,9 @@ func coverRejectReason(text string) string {
 		if strings.Contains(lower, phrase) {
 			return fmt.Sprintf("bad phrase: %q", phrase)
 		}
+	}
+	if hasExcessiveRepetition(words) {
+		return "excessive word repetition"
 	}
 	return "unknown"
 }
