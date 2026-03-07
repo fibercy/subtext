@@ -167,9 +167,9 @@ func (e *Encoder) formatPrompt(instruction, assistantText string) string {
 // and agree to insert/skip this marker without encoding/extracting bits.
 // Multiple markers are rotated to prevent the model from getting stuck in an EOS loop.
 var eosMarkers = []string{
-	", ", " and ", " - ", ". ", " but ",
-	"; ", " so ", " then ", " or ", " also ",
-	" -- ", " plus ", " anyway ", " yet ", " still ",
+	" and ", " but ", " so ", " then ", " or ",
+	" also ", " plus ", " anyway ", " yet ", " still ",
+	" maybe ", " though ", " really ", " actually ", " honestly ",
 }
 
 // promptVariation returns a small instruction suffix for retry attempts > 1.
@@ -650,21 +650,35 @@ func filterCoverCandidates(candidates []llm.LogprobToken) []llm.LogprobToken {
 	return makePrefixFree(filtered)
 }
 
-// filterSpaceAware enforces natural spacing between words. When the last
-// character of the generated text is a letter or digit, only keep candidates
-// that start with a space or punctuation (to avoid concatenated words like
-// "supposedtobe12"). Both encoder and decoder call this identically so they
-// agree on the candidate set.
+// filterSpaceAware enforces natural spacing and punctuation rules.
+// - After a letter/digit: only allow tokens starting with space or punctuation
+//   (prevents "supposedtobe12")
+// - After punctuation: only allow tokens starting with a space
+//   (prevents "?,." "!," and period-separated fragments like "works.for.us")
+// Both encoder and decoder call this identically so they agree on the candidate set.
 func filterSpaceAware(candidates []llm.LogprobToken, lastChar byte) []llm.LogprobToken {
-	if !isLetterOrDigit(lastChar) {
+	var filtered []llm.LogprobToken
+
+	if isPunctuation(lastChar) {
+		// After punctuation, only allow space-prefixed tokens
+		filtered = make([]llm.LogprobToken, 0, len(candidates))
+		for _, c := range candidates {
+			if len(c.Token) > 0 && c.Token[0] == ' ' {
+				filtered = append(filtered, c)
+			}
+		}
+	} else if isLetterOrDigit(lastChar) {
+		// After letter/digit, allow space or punctuation
+		filtered = make([]llm.LogprobToken, 0, len(candidates))
+		for _, c := range candidates {
+			if len(c.Token) > 0 && (c.Token[0] == ' ' || isPunctuation(c.Token[0])) {
+				filtered = append(filtered, c)
+			}
+		}
+	} else {
 		return candidates
 	}
-	filtered := make([]llm.LogprobToken, 0, len(candidates))
-	for _, c := range candidates {
-		if len(c.Token) > 0 && (c.Token[0] == ' ' || isPunctuation(c.Token[0])) {
-			filtered = append(filtered, c)
-		}
-	}
+
 	if len(filtered) == 0 {
 		return candidates // fallback: don't starve encoding
 	}

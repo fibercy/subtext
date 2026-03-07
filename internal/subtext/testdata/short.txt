@@ -1,14 +1,14 @@
 Secret:    hi
-Encrypted: c7e0af033cff0a5eb2c5 (10 bytes)
+Encrypted: a4682dbd8f43cc366653 (10 bytes)
 Topic:     casual chat
 Segments:  1
 Tokens:    35
-Chars:     174
+Chars:     171
 Words:     30
 Attempt:   2
 
 --- Cover Text ---
-Hey Mark? Heard traffic tonight has totally sucked. Need to leave early unless there's snow or something bizarre today lol hope your coffee's waiting for you when you get in!
+Hey Mark. It's still really warm oggi, gonna wear shorts with that new sweater vest you love so mut ter doesn't complain echang lagi shopping for vegetables and some meat.
 
 --- Recovered ---
 hi

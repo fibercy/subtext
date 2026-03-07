@@ -1,38 +1,38 @@
 Secret:    meet me at the coffee shop on 5th street tomorrow at 3pm
-Encrypted: eeb357e1dd0388a08442e2ee74340081c3d01f89321197d144ccb1a3e0cff366d8cb8c2448e2faa4192c9484a8ce1738b01b4100f262e8d8e353d43965606a0f (64 bytes)
+Encrypted: 75acbe7190cb755a7ae0f60980a076d1bc47336ad7e89d3424767976254644b6eca662109f5d9746883ecc134e214ae09b30340f44af0ca338b0557be7736252 (64 bytes)
 Topic:     weekend plans
 Segments:  7
-Tokens:    233
-Chars:     1190
-Words:     189
+Tokens:    216
+Chars:     1083
+Words:     190
 Attempt:   1
 
 --- Cover Text ---
-Hey alex , wanna meetup tomorrow for breakfast then we cans checkout tat new art exhibition ?,  l let us nos ur thoughts and  make final plans then . - ells.  but  if plans suit u better sunday pm that works too !
+Hey Sarah, planning to chill and play board games this Saturday maybe with burgers and root beans for those into pick ups sign at central park 12 pm?
 
 ---SEG---
 
-sure sunday sounds good lets hit upto grabs brunch joint first than wander over exhibition afterwards ? hopefully weather turns around by afternoon too ., ellen . and  u ?
+SURE WASS up Sarah, just reminding you about the games this SAT. meet me at the signup table for cards and carnivora at usual time, k?
 
 ---SEG---
 
-Sounds perfect!. Should we grab our art gallery passports too?: ) Hope ellens in the mood for trying new spots., Ellen RESPONSE me too excited to see what you picked!
+Hey Sally!, just a quick heads Up: heading up to the creek this sunny sat to fish chill, grab rods + lunch?. ty!
 
 ---SEG---
 
-cool excited here too want go straight eats though whats ure take on grub first versus explore later?, elling its friday maybe energy? and  u up early saturday too ?
+bringing a picnic rug too, let-me-known when details-work : ) and yme to meetup sat am! but 9. ok?! so ews rain? then 1. Ty!
 
 ---SEG---
 
-SURE lets go with eating first might get crowds everywhere later maybe catch something chill for us around here like that italian Place on third or what do you think sounds good to you too?
+guess might pack sunglasses also hope its sunny would rather avoid rainy weekends but whatever happens we adjust on sun hi! and 4 sure u can message whenever about the details kays thanks a ton!
 
 ---SEG---
 
-italian.Place works.for.us.i.m.thinking.red.sin.for.me.and.p.last.s.order.we.m.i.ke.right.?,  sounds.fun.right.? and  afterwards.sh.t.where?.
+for definite saturdays heading beach hopefully will chill bake some seafood maybe bring out volleyball net for games shall meet early lunch hope all works out for you too take care!
 
 ---SEG---
 
-sounds good too me too.aybe pasta then shots nearby?:))),  see.ur.?
+sounds good shall confirm parking nearby then tell you closer weekend looking forwards chatting soon.take care!
 
 --- Recovered ---
 meet me at the coffee shop on 5th street tomorrow at 3pm
