@@ -1,38 +1,38 @@
 Secret:    meet me at the coffee shop on 5th street tomorrow at 3pm
-Encrypted: 1db5b99f344d58c285e6284e416eb6c75003ac539b5882d5066489a59723759ab840347d378dc6a89d623216622757d23e8b1e510fa051619d37e9655f9832f5 (64 bytes)
+Encrypted: 99e05fd924849c0d7c1d7b85f36838694d426c588409eed8235d11c73c2366d7d13aaaf20d9ef7ef4c441bfb298060d755d0750ae122e3c92748d918409b6747 (64 bytes)
 Topic:     weekend plans
 Segments:  7
-Tokens:    219
-Chars:     1075
-Words:     159
+Tokens:    221
+Chars:     1180
+Words:     198
 Attempt:   1
 
 --- Cover Text ---
-Hey Jamie? Just wanted a friendly chat - got your schedule for movies on friday? Need your answer ASAP if plans gotta work!
+Hey Sarah. Just finalized our lunch Saturday downtown at noon near City Square if rain, then it's pizza. Otherwise headed for Riverside State Park.
 
 ---SEG---
 
-got friday afternoon ticket now Thinking we hook for brunch too this sunday morning what r ur ideas? and ican catch you earlier mon morning if easier for u then.
+sounds perfect; will grab your slice at Pie Station. Weather predicts sunshine tomorrow fingers crossed :cross: removed for no icons and 1 natural thread.
 
 ---SEG---
 
-SURE HOW-about-eclair-from-the-b bakery-at-tw El-n? otherwise lem me-known-if-we-sh'd-r-me-et-me-on-your-turf-mon-morning-instea-d.
+guess ill see ye at Pie around Noon then? wanna hit that park if temps reach eighty hopefully there will finally buds appearing on that cherry blossom over by the lake.
 
 ---SEG---
 
-SURE absolutely e-cl AIR works PERF thanks seeing-mon-wud-have-be-n-gr Ty again! and  wanna grab lunches-s atm-k? but  weekends-m-y-house-whatev convn-4u.
+Sounds perfect for both me! Enjoy meeting noon, take some photos at bloom spotting :D and  let's hope for sunshine rather than clouds. but  the trail is nice rain or shine.
 
 ---SEG---
 
-for Saturday how.about late brunch at victorial park bring that cookbook dish if okay just text me whatever works ty! and  looking towards a movie in teh afternoon maybe?
+great lets stay hopeful for a sunny trail day. ill text your latest photos tomorrow. have rest good one buddy and  nice dreams! but  yeah same time works perfectly for both of us.
 
 ---SEG---
 
-sounds GOOD sure movie r u planning one of our all day film sessions from netflix etc yes do ask what genre okay thanks!? and  got any kitchen plans for Sunday?
+gon Na grab morning brunch SAT if yer around feel relaxed and casual. later! and sweet dreams again pal. but ican't waits sunny or not trails gonna hit somehow hbu?
 
 ---SEG---
 
-SURE just checking popcorn snacks sorted for those flick genres you fancy okay BRB thinkinggenres.
+sounds good for morning Saturday brunch. let us both head for the trails later afternoon hopefully weather stays nice.
 
 --- Recovered ---
 meet me at the coffee shop on 5th street tomorrow at 3pm

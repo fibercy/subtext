@@ -144,6 +144,14 @@ func (e *Encoder) encodeSegment(ctx context.Context, prompt string, encryptedPay
 			}
 			continue
 		}
+		// LLM-based quality check: ask the model if the text reads like natural English conversation
+		if !e.isNaturalText(ctx, coverText) {
+			log.Printf("[stego] attempt %d: LLM rejected as unnatural: %q", attempt, coverText[:min(80, len(coverText))])
+			if attempt == MaxSegmentEncodeAttempts {
+				return "", 0, 0, 0, fmt.Errorf("generated segment rejected by LLM quality check")
+			}
+			continue
+		}
 		log.Printf("[stego] attempt %d: OK, %d tokens, text=%q", attempt, tokenCount, coverText[:min(80, len(coverText))])
 		return coverText, len(bits), tokenCount, attempt, nil
 	}
@@ -160,6 +168,30 @@ func (e *Encoder) formatPrompt(instruction, assistantText string) string {
 		return tmpl.FormatPrompt(instruction, assistantText)
 	}
 	return instruction + assistantText
+}
+
+// isNaturalText calls the LLM to check whether the generated cover text reads
+// like a natural everyday English text message. Returns true if the LLM considers
+// the text natural, false if it looks garbled or machine-generated.
+// On LLM error, returns true so encoding isn't blocked.
+func (e *Encoder) isNaturalText(ctx context.Context, text string) bool {
+	instruction := fmt.Sprintf(`Read this text message and decide if it sounds like something a real person would text a friend. Answer only "yes" or "no".
+
+Text: %s
+Answer:`, text)
+
+	prompt := e.formatPrompt(instruction, "")
+	resp, err := e.llmClient.Generate(ctx, prompt, llm.GenerateOptions{
+		Temperature: 0.1,
+		NumPredict:  3,
+	}, false)
+	if err != nil {
+		log.Printf("[stego] LLM quality check error: %v", err)
+		return true // don't block on LLM error
+	}
+
+	answer := strings.ToLower(strings.TrimSpace(resp.Response))
+	return strings.HasPrefix(answer, "yes")
 }
 
 // eosMarkers are continuation tokens inserted when the model hits EOS mid-encoding.
@@ -737,7 +769,7 @@ func isAllowedCoverToken(token string) bool {
 	if token == "" {
 		return false
 	}
-	if strings.ContainsAny(token, "\n\r\t[]{}<>_\\$@#/\"") {
+	if strings.ContainsAny(token, "\n\r\t[]{}<>_\\$@#/\"&()+") {
 		return false
 	}
 	if containsInvisible(token) {
@@ -764,6 +796,15 @@ func isAllowedCoverToken(token string) bool {
 
 	// Reject emoticon-like patterns
 	if strings.ContainsAny(token, ":;") && strings.ContainsAny(token, ")(DP") {
+		return false
+	}
+	// Reject repeated punctuation like ":))", "??", "!!", "..."
+	if len(trimmed) >= 2 && !hasVowel(trimmed) && !hasConsonant(trimmed) {
+		return false
+	}
+	// Reject tokens with punctuation glued to a letter (e.g. ".good", ".me", ",then")
+	// These create unnatural period-separated words like "sounds.good to.me"
+	if hasPunctuationGlue(word) {
 		return false
 	}
 
@@ -812,7 +853,10 @@ var badTokenSet = map[string]bool{
 	"avec": true, "pour": true, "dans": true, "chez": true, "cette": true,
 	"mais": true, "aussi": true, "tres": true, "tout": true, "comme": true,
 	"fait": true, "jour": true, "soir": true, "matin": true,
-	"merci": true, "bonjour": true,
+	"merci": true, "bonjour": true, "mieux": true, "peut": true,
+	"nuit": true, "oui": true, "voila": true, "rien": true,
+	"hacia": true, "mejor": true, "alors": true, "toujours": true,
+	"tarde": true, "casa": true, "autour": true, "vous": true,
 	// Indonesian / Malay
 	"lagi": true, "juga": true, "sudah": true, "akan": true, "dari": true,
 	"dengan": true, "untuk": true, "yang": true, "bisa": true, "harus": true,
@@ -836,6 +880,7 @@ var badTokenSet = map[string]bool{
 	"ttyl": true, "ily": true, "imo": true, "tbh": true,
 	"idk": true, "omg": true, "smh": true, "brb": true,
 	"lmao": true, "rofl": true, "ftw": true, "fyi": true,
+	"urs": true, "abs": true, "lol": true, "haha": true,
 }
 
 // isBadToken checks if a lowercase-trimmed token is in the blocklist.
@@ -865,6 +910,34 @@ func hasVowel(s string) bool {
 		switch c {
 		case 'a', 'e', 'i', 'o', 'u', 'y':
 			return true
+		}
+	}
+	return false
+}
+
+// hasPunctuationGlue returns true if the token has punctuation glued directly
+// to a letter without space. Catches tokens like ".good", ",then", ".me" that
+// create unnatural period-separated text like "sounds.good to.me".
+// Apostrophes are excluded since contractions like "'s", "'t", "'m" are natural.
+func hasPunctuationGlue(s string) bool {
+	for i := 0; i < len(s)-1; i++ {
+		if s[i] != '\'' && isPunctuation(s[i]) && isLetterOrDigit(s[i+1]) {
+			return true
+		}
+	}
+	return false
+}
+
+// hasConsonant returns true if the string contains at least one consonant.
+func hasConsonant(s string) bool {
+	for _, c := range strings.ToLower(s) {
+		if c >= 'a' && c <= 'z' {
+			switch c {
+			case 'a', 'e', 'i', 'o', 'u', 'y':
+				continue
+			default:
+				return true
+			}
 		}
 	}
 	return false
