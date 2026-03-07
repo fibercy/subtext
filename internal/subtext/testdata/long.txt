@@ -1,0 +1,38 @@
+Secret:    meet me at the coffee shop on 5th street tomorrow at 3pm
+Encrypted: 04d3eebfe21ef0088ae8206b204d7622e8788918b54927244f2d34f8c53d69a3b8cabd540855f9f53b7491d3e7d8c0f5d2d936e3a23add4455ce943d22b9f104 (64 bytes)
+Topic:     weekend plans
+Segments:  7
+Tokens:    201
+Chars:     1074
+Words:     183
+Attempt:   2
+
+--- Cover Text ---
+Hey Jamie. Going to park with kids on weekends for play. Might stop chez Marcel later on. You fancy hanging maybe earlier?, istringstream.
+
+---SEG---
+
+def gonna meet my folks at that chinese takeaway they rave.about by mid. anything up before? hopefully you are still on forIndexPath Jamie.
+
+---SEG---
+
+heading grocery soon, then couch maybe a bit of gaming? sounds like tons happening weekend yeah?,  talk sat lunch if ur up and  around -  jamie.
+
+---SEG---
+
+heading over to gym early, rest up thinking nap + prep dinner before anyone rocks my zone haha ok see round noon lunch?
+
+---SEG---
+
+gon Na grocery pickup this lunch if cool still ty for swing timing around stuff friend always do hope ur brunch plans chill dude see u later,  AppCompatActivity\.
+
+---SEG---
+
+catch my ride over at eleven for supermarket errands if weekends relax too wanna hit up that new taco stall later perhaps around sixish ping me time closer k thx.
+
+---SEG---
+
+Heading out shortly and heading into the shops at ten. Thinking about meeting up at the taco place after work, how does seven sound?
+
+--- Recovered ---
+meet me at the coffee shop on 5th street tomorrow at 3pm

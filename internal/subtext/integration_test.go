@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -35,10 +38,17 @@ var dummyKey = func() []byte {
 	return k
 }()
 
+// testdataDir returns the absolute path to the testdata directory next to the test file.
+func testdataDir() string {
+	_, filename, _, _ := runtime.Caller(0)
+	return filepath.Join(filepath.Dir(filename), "testdata")
+}
+
 // testEncryptRoundTrip encrypts secret, encodes into cover text, decodes, decrypts, and verifies.
-// Retries up to 3 times since CompactEncrypt uses a random nonce, and some encrypted payloads
+// Writes results to testdata/<outFile> for inspection without re-running.
+// Retries up to 5 times since CompactEncrypt uses a random nonce, and some encrypted payloads
 // cause LLM candidate-set disagreements between encode and decode.
-func testEncryptRoundTrip(t *testing.T, client *llm.Client, ctx context.Context, secret, topic string) {
+func testEncryptRoundTrip(t *testing.T, client *llm.Client, ctx context.Context, secret, topic, outFile string) {
 	t.Helper()
 
 	t.Logf("Secret: %q (%d bytes)", secret, len(secret))
@@ -93,6 +103,24 @@ func testEncryptRoundTrip(t *testing.T, client *llm.Client, ctx context.Context,
 		}
 
 		t.Logf("Round-trip SUCCESS (attempt %d)", attempt)
+
+		// Write results to file
+		var report strings.Builder
+		report.WriteString(fmt.Sprintf("Secret:    %s\n", secret))
+		report.WriteString(fmt.Sprintf("Encrypted: %s (%d bytes)\n", hex.EncodeToString(encrypted), len(encrypted)))
+		report.WriteString(fmt.Sprintf("Topic:     %s\n", topic))
+		report.WriteString(fmt.Sprintf("Segments:  %d\n", segments))
+		report.WriteString(fmt.Sprintf("Tokens:    %d\n", result.TokenCount))
+		report.WriteString(fmt.Sprintf("Chars:     %d\n", len(result.CoverText)))
+		report.WriteString(fmt.Sprintf("Words:     %d\n", len(words)))
+		report.WriteString(fmt.Sprintf("Attempt:   %d\n", attempt))
+		report.WriteString(fmt.Sprintf("\n--- Cover Text ---\n%s\n", result.CoverText))
+		report.WriteString(fmt.Sprintf("\n--- Recovered ---\n%s\n", string(decrypted)))
+
+		outPath := filepath.Join(testdataDir(), outFile)
+		if err := os.WriteFile(outPath, []byte(report.String()), 0644); err != nil {
+			t.Logf("warning: failed to write %s: %v", outPath, err)
+		}
 		return
 	}
 
@@ -101,19 +129,19 @@ func testEncryptRoundTrip(t *testing.T, client *llm.Client, ctx context.Context,
 
 func TestStegoShort(t *testing.T) {
 	client, ctx := setupLLM(t)
-	testEncryptRoundTrip(t, client, ctx, "hi", "casual chat")
+	testEncryptRoundTrip(t, client, ctx, "hi", "casual chat", "short.txt")
 }
 
 func TestStegoMedium(t *testing.T) {
 	client, ctx := setupLLM(t)
-	testEncryptRoundTrip(t, client, ctx, "meet me at 3pm", "casual chat")
+	testEncryptRoundTrip(t, client, ctx, "meet me at 3pm", "casual chat", "medium.txt")
 }
 
 func TestStegoLong(t *testing.T) {
 	client, ctx := setupLLM(t)
 	testEncryptRoundTrip(t, client, ctx,
 		"meet me at the coffee shop on 5th street tomorrow at 3pm",
-		"weekend plans")
+		"weekend plans", "long.txt")
 }
 
 // TestArithmeticLLMRoundTrip tests low-level arithmetic coding with real LLM logprobs.
