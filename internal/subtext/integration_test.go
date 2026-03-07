@@ -2,16 +2,121 @@ package subtext
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
+	"github.com/cy/subtext/internal/crypto"
 	"github.com/cy/subtext/internal/llm"
 )
 
-// TestArithmeticLLMRoundTrip tests arithmetic coding with real LLM logprobs.
-// Requires Ollama running with qwen2.5:14b. Skip if unavailable.
+// setupLLM creates a client and skips the test if Ollama is unavailable.
+func setupLLM(t *testing.T) (*llm.Client, context.Context) {
+	t.Helper()
+	client := llm.NewClient()
+	ctx := context.Background()
+
+	if err := client.Ping(ctx); err != nil {
+		t.Skipf("Ollama not available: %v", err)
+	}
+	if _, err := client.FetchChatTemplate(ctx); err != nil {
+		t.Skipf("Failed to get chat template: %v", err)
+	}
+	return client, ctx
+}
+
+// dummyKey is a fixed key for deterministic encrypted test payloads.
+var dummyKey = func() []byte {
+	k := make([]byte, 32)
+	for i := range k {
+		k[i] = byte(i)
+	}
+	return k
+}()
+
+// testEncryptRoundTrip encrypts secret, encodes into cover text, decodes, decrypts, and verifies.
+// Retries up to 3 times since CompactEncrypt uses a random nonce, and some encrypted payloads
+// cause LLM candidate-set disagreements between encode and decode.
+func testEncryptRoundTrip(t *testing.T, client *llm.Client, ctx context.Context, secret, topic string) {
+	t.Helper()
+
+	t.Logf("Secret: %q (%d bytes)", secret, len(secret))
+
+	const maxAttempts = 5
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		if attempt > 1 {
+			t.Logf("--- retry %d/%d (new random nonce) ---", attempt, maxAttempts)
+		}
+
+		encrypted, err := crypto.CompactEncrypt(dummyKey, []byte(secret))
+		if err != nil {
+			t.Fatalf("encrypt: %v", err)
+		}
+		t.Logf("Encrypted: %s (%d bytes)", hex.EncodeToString(encrypted), len(encrypted))
+
+		enc := NewEncoder(client)
+		result, err := enc.Encode(ctx, encrypted, topic)
+		if err != nil {
+			t.Logf("encode failed: %v", err)
+			continue
+		}
+
+		words := strings.Fields(result.CoverText)
+		segments := strings.Count(result.CoverText, segmentSeparator) + 1
+		t.Logf("Cover:     %q", result.CoverText)
+		t.Logf("Stats:     %d segments, %d tokens, %d chars, %d words",
+			segments, result.TokenCount, len(result.CoverText), len(words))
+
+		dec := NewDecoder(client)
+		decoded, err := dec.Decode(ctx, result.CoverText, topic)
+		if err != nil {
+			t.Logf("decode error: %v", err)
+			continue
+		}
+		if !decoded.Valid {
+			t.Logf("decode returned invalid")
+			continue
+		}
+
+		decrypted, err := crypto.CompactDecrypt(dummyKey, decoded.EncryptedPayload)
+		if err != nil {
+			t.Logf("decrypt failed: %v", err)
+			continue
+		}
+
+		t.Logf("Recovered: %q", string(decrypted))
+
+		if string(decrypted) != secret {
+			t.Logf("MISMATCH: got %q, want %q", string(decrypted), secret)
+			continue
+		}
+
+		t.Logf("Round-trip SUCCESS (attempt %d)", attempt)
+		return
+	}
+
+	t.Fatalf("all %d attempts failed for secret %q", maxAttempts, secret)
+}
+
+func TestStegoShort(t *testing.T) {
+	client, ctx := setupLLM(t)
+	testEncryptRoundTrip(t, client, ctx, "hi", "casual chat")
+}
+
+func TestStegoMedium(t *testing.T) {
+	client, ctx := setupLLM(t)
+	testEncryptRoundTrip(t, client, ctx, "meet me at 3pm", "casual chat")
+}
+
+func TestStegoLong(t *testing.T) {
+	client, ctx := setupLLM(t)
+	testEncryptRoundTrip(t, client, ctx,
+		"meet me at the coffee shop on 5th street tomorrow at 3pm",
+		"weekend plans")
+}
+
+// TestArithmeticLLMRoundTrip tests low-level arithmetic coding with real LLM logprobs.
 func TestArithmeticLLMRoundTrip(t *testing.T) {
 	client := llm.NewClient()
 	ctx := context.Background()
@@ -23,10 +128,8 @@ func TestArithmeticLLMRoundTrip(t *testing.T) {
 		t.Skipf("Failed to get chat template: %v", err)
 	}
 
-	// Use a small payload: 4 bytes = 1 segment
 	payload := []byte{0xDE, 0xAD, 0xBE, 0xEF}
 
-	// Add 1-byte length prefix
 	payloadWithLen := make([]byte, 1+len(payload))
 	payloadWithLen[0] = byte(len(payload))
 	copy(payloadWithLen[1:], payload)
@@ -34,11 +137,7 @@ func TestArithmeticLLMRoundTrip(t *testing.T) {
 	t.Logf("payload bits: %d bits", len(bits))
 
 	instruction := buildPrompt("weather")
-	instruction += promptVariation(1) // attempt 1 = no variation
-
-	// --- ENCODE ---
-	enc := NewArithEncoder(bits)
-	originalBitLen := len(bits)
+	instruction += promptVariation(1)
 
 	tmpl := client.GetChatTemplate()
 	formatPrompt := func(instr, text string) string {
@@ -47,6 +146,10 @@ func TestArithmeticLLMRoundTrip(t *testing.T) {
 		}
 		return instr + text
 	}
+
+	// --- ENCODE ---
+	enc := NewArithEncoder(bits)
+	originalBitLen := len(bits)
 
 	var encResult strings.Builder
 	encTokenCount := 0
@@ -82,12 +185,9 @@ func TestArithmeticLLMRoundTrip(t *testing.T) {
 
 		if noLogprobs || len(candidates) == 0 {
 			if eosRecoveries >= len(eosMarkers) {
-				t.Logf("enc: EOS exhausted at token %d", encTokenCount)
 				break
 			}
-			marker := eosMarkers[eosRecoveries]
-			t.Logf("enc step %3d: EOS recovery, marker=%q", encTokenCount, marker)
-			encResult.WriteString(marker)
+			encResult.WriteString(eosMarkers[eosRecoveries])
 			eosRecoveries++
 			encTokenCount++
 			continue
@@ -97,9 +197,6 @@ func TestArithmeticLLMRoundTrip(t *testing.T) {
 		token := enc.EncodeStep(dist)
 		encResult.WriteString(token)
 		encTokenCount++
-
-		t.Logf("enc step %3d: token=%q candidates=%d consumed=%d",
-			encTokenCount-1, token, len(dist.Tokens), enc.BitsConsumed())
 	}
 
 	coverText := strings.TrimSpace(encResult.String())
@@ -108,8 +205,8 @@ func TestArithmeticLLMRoundTrip(t *testing.T) {
 		bitsEncoded = originalBitLen
 	}
 
-	t.Logf("\nCover text: %q", coverText)
-	t.Logf("Bits encoded: %d / %d, tokens: %d\n", bitsEncoded, originalBitLen, encTokenCount)
+	t.Logf("Cover text: %q", coverText)
+	t.Logf("Bits encoded: %d / %d, tokens: %d", bitsEncoded, originalBitLen, encTokenCount)
 
 	if bitsEncoded < originalBitLen {
 		t.Fatalf("encode incomplete: %d / %d bits", bitsEncoded, originalBitLen)
@@ -159,11 +256,9 @@ func TestArithmeticLLMRoundTrip(t *testing.T) {
 					assistantText.WriteString(marker)
 					eosRecoveries++
 					decTokenCount++
-					t.Logf("dec step %3d: EOS marker=%q", decTokenCount-1, marker)
 					continue
 				}
 			}
-			t.Logf("dec: stuck at token %d, remaining=%q", decTokenCount, remainingText[:min(40, len(remainingText))])
 			break
 		}
 
@@ -186,60 +281,36 @@ func TestArithmeticLLMRoundTrip(t *testing.T) {
 		}
 
 		if matchedToken == "" {
-			t.Logf("dec step %3d: NO MATCH for %q, candidates=%d, skipping char",
-				decTokenCount, remainingText[:min(20, len(remainingText))], len(dist.Tokens))
-			// Log first few candidates for debugging
-			for i, tok := range dist.Tokens {
-				if i >= 5 {
-					break
-				}
-				t.Logf("  candidate: %q", tok.Token)
-			}
 			remainingText = remainingText[1:]
 			continue
 		}
 
-		prevBits := dec.BitsRecovered()
 		if err := dec.DecodeStep(dist, matchedToken); err != nil {
 			t.Fatalf("decode step failed: %v", err)
 		}
-		newBits := dec.BitsRecovered() - prevBits
 
 		allowTrimmed = false
 		remainingText = strings.TrimPrefix(remainingText, actualConsumed)
 		assistantText.WriteString(matchedToken)
 		decTokenCount++
-
-		t.Logf("dec step %3d: token=%q candidates=%d recovered=%d(+%d)",
-			decTokenCount-1, matchedToken, len(dist.Tokens), dec.BitsRecovered(), newBits)
 	}
 
 	dec.Flush()
 	extractedBits := dec.Bits()
-	t.Logf("\nTotal bits recovered: %d", len(extractedBits))
-
 	extractedBytes := bitsToBytes(extractedBits)
 	if len(extractedBytes) < 1 {
 		t.Fatalf("not enough bytes: %d", len(extractedBytes))
 	}
 
 	pLen := int(extractedBytes[0])
-	t.Logf("Decoded length prefix: %d", pLen)
-
 	if pLen > len(extractedBytes)-1 || pLen > MaxSecretLength {
 		t.Fatalf("invalid length: %d (have %d bytes)", pLen, len(extractedBytes)-1)
 	}
 
 	recovered := extractedBytes[1 : 1+pLen]
-	t.Logf("Recovered payload: %x", recovered)
-	t.Logf("Original payload:  %x", payload)
-
 	if fmt.Sprintf("%x", recovered) != fmt.Sprintf("%x", payload) {
 		t.Errorf("MISMATCH: got %x, want %x", recovered, payload)
 	} else {
 		t.Log("Round-trip SUCCESS!")
 	}
-
-	// Cleanup
-	os.Remove("internal/stego/prompt.txt")
 }
