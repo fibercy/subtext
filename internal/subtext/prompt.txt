@@ -3,10 +3,12 @@ Hard rules:
 - ENGLISH ONLY - no other languages at all
 - 1 to 3 casual sentences
 - 15 to 40 words total
-- plain conversational English, mostly lowercase
+- use full standard English words, no abbreviations or texting slang
+- plain conversational tone, mostly lowercase
 - mundane and specific (like normal daily life)
 - no bullets, no lists, no quotes
 - no brackets or parentheses
-- no emojis or special characters
+- no emojis, emoticons, or special characters
+- no hyphens connecting words
 - no explanations about style or generation
 - output only the message text

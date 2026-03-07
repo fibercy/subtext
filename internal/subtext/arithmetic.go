@@ -46,12 +46,30 @@ type CandidateDistribution struct {
 	Total  uint32
 }
 
-// buildDistribution creates a uniform CDF from LLM logprob candidates.
-// All candidates receive equal weight. This makes the distribution depend only
-// on WHICH tokens are present (determined by the candidate set), not on their
-// exact logprob values — eliminating sensitivity to tiny LLM logprob variations
-// between encode and decode calls.
-// With N candidates each token encodes log2(N) bits.
+// logprobBucketWeight maps a logprob value to a coarse weight bucket.
+// Uses floor(logprob) with wide 2.0-unit buckets to be robust against
+// small logprob variations (±0.5) between encode and decode calls.
+// Higher probability tokens get proportionally higher weights, favoring
+// natural text while still encoding bits from all candidates.
+func logprobBucketWeight(logprob float64) uint32 {
+	switch {
+	case logprob > -1.0:
+		return 16 // very high probability — most natural
+	case logprob > -3.0:
+		return 8
+	case logprob > -5.0:
+		return 4
+	default:
+		return 2 // low probability — least natural but still usable
+	}
+}
+
+// buildDistribution creates a CDF from LLM logprob candidates using coarse
+// bucket weights. Candidates are sorted lexicographically for deterministic
+// encoder/decoder agreement. Each candidate's weight is determined by its
+// logprob bucket — higher probability tokens get higher weights, making them
+// more likely to be selected. The coarse buckets (2.0-unit width) ensure
+// robustness against small logprob variations between encode and decode.
 func buildDistribution(candidates []llm.LogprobToken) *CandidateDistribution {
 	if len(candidates) == 0 {
 		return &CandidateDistribution{Total: 0}
@@ -63,20 +81,10 @@ func buildDistribution(candidates []llm.LogprobToken) *CandidateDistribution {
 		return sorted[i].Token < sorted[j].Token
 	})
 
-	n := uint32(len(sorted))
-	weight := QuantizationTotal / n
-	if weight < 1 {
-		weight = 1
-	}
-	remainder := QuantizationTotal - weight*n
-
 	tokens := make([]CandidateToken, len(sorted))
 	var cumulative uint32
 	for i, c := range sorted {
-		w := weight
-		if uint32(i) < remainder {
-			w++ // spread remainder across first few tokens
-		}
+		w := logprobBucketWeight(c.Logprob)
 		tokens[i] = CandidateToken{
 			Token:    c.Token,
 			Weight:   w,

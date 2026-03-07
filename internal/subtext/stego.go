@@ -586,10 +586,13 @@ func buildPrompt(topic string) string {
 Hard rules:
 - 1 to 3 casual sentences
 - 15 to 40 words total
-- plain conversational English, mostly lowercase
+- use full standard English words, no abbreviations or texting slang
+- plain conversational tone, mostly lowercase
 - mundane and specific (like normal daily life)
 - no bullets, no lists, no quotes
 - no brackets or parentheses
+- no emojis, emoticons, or special characters
+- no hyphens connecting words
 - no explanations about style or generation
 - output only the message text
 	`, topic)
@@ -746,6 +749,43 @@ func isAllowedCoverToken(token string) bool {
 		return false
 	}
 
+	// Reject tokens with internal hyphens (e.g. "told-me", "at-work")
+	word := strings.TrimSpace(token)
+	if len(word) > 1 && strings.Contains(word[1:len(word)-1], "-") {
+		return false
+	}
+
+	// Reject emoticon-like patterns
+	if strings.ContainsAny(token, ":;") && strings.ContainsAny(token, ")(DP") {
+		return false
+	}
+
+	// Reject consonant-only words (catches "tty", "nx", "gd", "tm" etc.)
+	if len(trimmed) >= 2 && !hasVowel(trimmed) && isAlphaOnly(trimmed) {
+		return false
+	}
+
+	return true
+}
+
+// hasVowel returns true if the string contains at least one vowel.
+func hasVowel(s string) bool {
+	for _, c := range strings.ToLower(s) {
+		switch c {
+		case 'a', 'e', 'i', 'o', 'u', 'y':
+			return true
+		}
+	}
+	return false
+}
+
+// isAlphaOnly returns true if the string contains only ASCII letters.
+func isAlphaOnly(s string) bool {
+	for _, c := range s {
+		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+			return false
+		}
+	}
 	return true
 }
 

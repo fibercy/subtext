@@ -29,9 +29,13 @@ func TestBuildDistribution(t *testing.T) {
 		t.Errorf("expected third token 'zoo', got %q", dist.Tokens[2].Token)
 	}
 
-	// Total should equal QuantizationTotal
-	if dist.Total != QuantizationTotal {
-		t.Errorf("total %d != QuantizationTotal %d", dist.Total, QuantizationTotal)
+	// Total should equal sum of bucket weights
+	var expectedTotal uint32
+	for _, tok := range dist.Tokens {
+		expectedTotal += tok.Weight
+	}
+	if dist.Total != expectedTotal {
+		t.Errorf("total %d != sum of weights %d", dist.Total, expectedTotal)
 	}
 
 	// CDF should be contiguous
@@ -46,8 +50,8 @@ func TestBuildDistribution(t *testing.T) {
 			t.Errorf("token %d has empty range [%d, %d)", i, tok.CumStart, tok.CumEnd)
 		}
 	}
-	if dist.Tokens[len(dist.Tokens)-1].CumEnd != QuantizationTotal {
-		t.Errorf("last CumEnd %d != QuantizationTotal %d", dist.Tokens[len(dist.Tokens)-1].CumEnd, QuantizationTotal)
+	if dist.Tokens[len(dist.Tokens)-1].CumEnd != dist.Total {
+		t.Errorf("last CumEnd %d != Total %d", dist.Tokens[len(dist.Tokens)-1].CumEnd, dist.Total)
 	}
 }
 
@@ -60,8 +64,9 @@ func TestBuildDistributionSingleCandidate(t *testing.T) {
 	if len(dist.Tokens) != 1 {
 		t.Fatalf("expected 1 token, got %d", len(dist.Tokens))
 	}
-	if dist.Tokens[0].CumStart != 0 || dist.Tokens[0].CumEnd != QuantizationTotal {
-		t.Errorf("single token should span entire range")
+	if dist.Tokens[0].CumStart != 0 || dist.Tokens[0].CumEnd != dist.Total {
+		t.Errorf("single token should span entire range, got [%d, %d) total=%d",
+			dist.Tokens[0].CumStart, dist.Tokens[0].CumEnd, dist.Total)
 	}
 }
 
@@ -74,16 +79,40 @@ func TestBuildDistributionEqualProbs(t *testing.T) {
 	}
 
 	dist := buildDistribution(candidates)
-	if dist.Total != QuantizationTotal {
-		t.Errorf("total %d != %d", dist.Total, QuantizationTotal)
-	}
-	// Each weight should be approximately QuantizationTotal/4
-	for _, tok := range dist.Tokens {
-		expected := QuantizationTotal / 4
-		diff := int32(tok.Weight) - int32(expected)
-		if diff < -2 || diff > 2 {
-			t.Errorf("token %q weight %d far from expected %d", tok.Token, tok.Weight, expected)
+	// All tokens have the same logprob, so they should get the same bucket weight
+	for i := 1; i < len(dist.Tokens); i++ {
+		if dist.Tokens[i].Weight != dist.Tokens[0].Weight {
+			t.Errorf("token %q weight %d != token %q weight %d",
+				dist.Tokens[i].Token, dist.Tokens[i].Weight,
+				dist.Tokens[0].Token, dist.Tokens[0].Weight)
 		}
+	}
+}
+
+func TestBuildDistributionBucketWeights(t *testing.T) {
+	candidates := []llm.LogprobToken{
+		{Token: "likely", Logprob: -0.5},   // bucket > -1.0 → weight 16
+		{Token: "medium", Logprob: -2.0},   // bucket > -3.0 → weight 8
+		{Token: "unlikely", Logprob: -4.5}, // bucket > -5.0 → weight 4
+		{Token: "rare", Logprob: -6.0},     // bucket <= -5.0 → weight 2
+	}
+
+	dist := buildDistribution(candidates)
+
+	// Verify bucket weights (sorted lexicographically: likely, medium, rare, unlikely)
+	expected := map[string]uint32{
+		"likely":   16,
+		"medium":   8,
+		"rare":     2,
+		"unlikely": 4,
+	}
+	for _, tok := range dist.Tokens {
+		if tok.Weight != expected[tok.Token] {
+			t.Errorf("token %q: weight %d, want %d", tok.Token, tok.Weight, expected[tok.Token])
+		}
+	}
+	if dist.Total != 30 { // 16+8+4+2
+		t.Errorf("total %d, want 30", dist.Total)
 	}
 }
 
