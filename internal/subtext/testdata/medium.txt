@@ -1,22 +1,22 @@
 Secret:    meet me at 3pm
-Encrypted: 131e030e1da5396080e9eb58194065fc45ea874c46a9 (22 bytes)
+Encrypted: f4a97f7309cb1c97d7d8d613ca1c033521f9436cbe97 (22 bytes)
 Topic:     casual chat
 Segments:  3
-Tokens:    79
-Chars:     394
-Words:     67
-Attempt:   2
+Tokens:    72
+Chars:     371
+Words:     63
+Attempt:   1
 
 --- Cover Text ---
-Hey Liam," it's quite sunny. Thought about checking tennis tomorrow, joining me if fits your mood and timeline. Hope life well with you!
+Hey Mike,! Hope work didn't drain everything out, wants us catch that evening game maybe at pub close-by.?,  sounds okay?,?,.
 
 ---SEG---
 
-def gotta catch tomorrow morning if you wanna soak in the sunlight on the courts, what'd miss a sunrise jog around usual?, ight see you soon!
+catch the pub quiz too then game seems lots more fun that night. see ur what about food later maybe sandwiches pizza share around?.
 
 ---SEG---
 
-catch me for basketball whenever, might squeeze jog in early but no promises, see ya later!
+sounds good if that fits too. want to grab something earlier or wait till after the quiz?
 
 --- Recovered ---
 meet me at 3pm

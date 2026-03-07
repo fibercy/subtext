@@ -1,14 +1,14 @@
 Secret:    hi
-Encrypted: 30b9d078b685119251c9 (10 bytes)
+Encrypted: c7e0af033cff0a5eb2c5 (10 bytes)
 Topic:     casual chat
 Segments:  1
-Tokens:    52
-Chars:     261
-Words:     40
+Tokens:    35
+Chars:     174
+Words:     30
 Attempt:   2
 
 --- Cover Text ---
-Hey Liam? Rain tomorrow, maybe grab lunches indoors again?\URLException for more chat if raining!,  thanks. and  see you later regardless? -  mike.  URLException: This looks like an attempt to include a URL or additional punctuation which isn't allowed per your
+Hey Mark? Heard traffic tonight has totally sucked. Need to leave early unless there's snow or something bizarre today lol hope your coffee's waiting for you when you get in!
 
 --- Recovered ---
 hi

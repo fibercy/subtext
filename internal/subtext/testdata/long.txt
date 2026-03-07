@@ -1,38 +1,38 @@
 Secret:    meet me at the coffee shop on 5th street tomorrow at 3pm
-Encrypted: 04d3eebfe21ef0088ae8206b204d7622e8788918b54927244f2d34f8c53d69a3b8cabd540855f9f53b7491d3e7d8c0f5d2d936e3a23add4455ce943d22b9f104 (64 bytes)
+Encrypted: eeb357e1dd0388a08442e2ee74340081c3d01f89321197d144ccb1a3e0cff366d8cb8c2448e2faa4192c9484a8ce1738b01b4100f262e8d8e353d43965606a0f (64 bytes)
 Topic:     weekend plans
 Segments:  7
-Tokens:    201
-Chars:     1074
-Words:     183
-Attempt:   2
+Tokens:    233
+Chars:     1190
+Words:     189
+Attempt:   1
 
 --- Cover Text ---
-Hey Jamie. Going to park with kids on weekends for play. Might stop chez Marcel later on. You fancy hanging maybe earlier?, istringstream.
+Hey alex , wanna meetup tomorrow for breakfast then we cans checkout tat new art exhibition ?,  l let us nos ur thoughts and  make final plans then . - ells.  but  if plans suit u better sunday pm that works too !
 
 ---SEG---
 
-def gonna meet my folks at that chinese takeaway they rave.about by mid. anything up before? hopefully you are still on forIndexPath Jamie.
+sure sunday sounds good lets hit upto grabs brunch joint first than wander over exhibition afterwards ? hopefully weather turns around by afternoon too ., ellen . and  u ?
 
 ---SEG---
 
-heading grocery soon, then couch maybe a bit of gaming? sounds like tons happening weekend yeah?,  talk sat lunch if ur up and  around -  jamie.
+Sounds perfect!. Should we grab our art gallery passports too?: ) Hope ellens in the mood for trying new spots., Ellen RESPONSE me too excited to see what you picked!
 
 ---SEG---
 
-heading over to gym early, rest up thinking nap + prep dinner before anyone rocks my zone haha ok see round noon lunch?
+cool excited here too want go straight eats though whats ure take on grub first versus explore later?, elling its friday maybe energy? and  u up early saturday too ?
 
 ---SEG---
 
-gon Na grocery pickup this lunch if cool still ty for swing timing around stuff friend always do hope ur brunch plans chill dude see u later,  AppCompatActivity\.
+SURE lets go with eating first might get crowds everywhere later maybe catch something chill for us around here like that italian Place on third or what do you think sounds good to you too?
 
 ---SEG---
 
-catch my ride over at eleven for supermarket errands if weekends relax too wanna hit up that new taco stall later perhaps around sixish ping me time closer k thx.
+italian.Place works.for.us.i.m.thinking.red.sin.for.me.and.p.last.s.order.we.m.i.ke.right.?,  sounds.fun.right.? and  afterwards.sh.t.where?.
 
 ---SEG---
 
-Heading out shortly and heading into the shops at ten. Thinking about meeting up at the taco place after work, how does seven sound?
+sounds good too me too.aybe pasta then shots nearby?:))),  see.ur.?
 
 --- Recovered ---
 meet me at the coffee shop on 5th street tomorrow at 3pm

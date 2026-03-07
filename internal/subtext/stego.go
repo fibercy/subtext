@@ -723,7 +723,7 @@ func isAllowedCoverToken(token string) bool {
 	if token == "" {
 		return false
 	}
-	if strings.ContainsAny(token, "\n\r\t[]{}<>_") {
+	if strings.ContainsAny(token, "\n\r\t[]{}<>_\\$@#/\"") {
 		return false
 	}
 	if containsInvisible(token) {
@@ -765,7 +765,29 @@ func isAllowedCoverToken(token string) bool {
 		return false
 	}
 
+	// Reject camelCase/PascalCase tokens (code identifiers like "URLException",
+	// "forIndexPath", "AppCompatActivity", "istringstream")
+	if isCamelCase(word) {
+		return false
+	}
+
 	return true
+}
+
+// isCamelCase returns true if s looks like a code identifier:
+// a lowercase letter immediately followed by an uppercase letter (camelCase),
+// or an all-lowercase word longer than 10 chars with no spaces (likely code like "istringstream").
+func isCamelCase(s string) bool {
+	for i := 1; i < len(s); i++ {
+		if s[i-1] >= 'a' && s[i-1] <= 'z' && s[i] >= 'A' && s[i] <= 'Z' {
+			return true
+		}
+	}
+	// Long all-lowercase single words are likely code identifiers
+	if len(s) > 10 && isAlphaOnly(s) && strings.ToLower(s) == s {
+		return true
+	}
+	return false
 }
 
 // hasVowel returns true if the string contains at least one vowel.
