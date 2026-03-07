@@ -1,38 +1,38 @@
 Secret:    meet me at the coffee shop on 5th street tomorrow at 3pm
-Encrypted: 75acbe7190cb755a7ae0f60980a076d1bc47336ad7e89d3424767976254644b6eca662109f5d9746883ecc134e214ae09b30340f44af0ca338b0557be7736252 (64 bytes)
+Encrypted: 1db5b99f344d58c285e6284e416eb6c75003ac539b5882d5066489a59723759ab840347d378dc6a89d623216622757d23e8b1e510fa051619d37e9655f9832f5 (64 bytes)
 Topic:     weekend plans
 Segments:  7
-Tokens:    216
-Chars:     1083
-Words:     190
+Tokens:    219
+Chars:     1075
+Words:     159
 Attempt:   1
 
 --- Cover Text ---
-Hey Sarah, planning to chill and play board games this Saturday maybe with burgers and root beans for those into pick ups sign at central park 12 pm?
+Hey Jamie? Just wanted a friendly chat - got your schedule for movies on friday? Need your answer ASAP if plans gotta work!
 
 ---SEG---
 
-SURE WASS up Sarah, just reminding you about the games this SAT. meet me at the signup table for cards and carnivora at usual time, k?
+got friday afternoon ticket now Thinking we hook for brunch too this sunday morning what r ur ideas? and ican catch you earlier mon morning if easier for u then.
 
 ---SEG---
 
-Hey Sally!, just a quick heads Up: heading up to the creek this sunny sat to fish chill, grab rods + lunch?. ty!
+SURE HOW-about-eclair-from-the-b bakery-at-tw El-n? otherwise lem me-known-if-we-sh'd-r-me-et-me-on-your-turf-mon-morning-instea-d.
 
 ---SEG---
 
-bringing a picnic rug too, let-me-known when details-work : ) and yme to meetup sat am! but 9. ok?! so ews rain? then 1. Ty!
+SURE absolutely e-cl AIR works PERF thanks seeing-mon-wud-have-be-n-gr Ty again! and  wanna grab lunches-s atm-k? but  weekends-m-y-house-whatev convn-4u.
 
 ---SEG---
 
-guess might pack sunglasses also hope its sunny would rather avoid rainy weekends but whatever happens we adjust on sun hi! and 4 sure u can message whenever about the details kays thanks a ton!
+for Saturday how.about late brunch at victorial park bring that cookbook dish if okay just text me whatever works ty! and  looking towards a movie in teh afternoon maybe?
 
 ---SEG---
 
-for definite saturdays heading beach hopefully will chill bake some seafood maybe bring out volleyball net for games shall meet early lunch hope all works out for you too take care!
+sounds GOOD sure movie r u planning one of our all day film sessions from netflix etc yes do ask what genre okay thanks!? and  got any kitchen plans for Sunday?
 
 ---SEG---
 
-sounds good shall confirm parking nearby then tell you closer weekend looking forwards chatting soon.take care!
+SURE just checking popcorn snacks sorted for those flick genres you fancy okay BRB thinkinggenres.
 
 --- Recovered ---
 meet me at the coffee shop on 5th street tomorrow at 3pm

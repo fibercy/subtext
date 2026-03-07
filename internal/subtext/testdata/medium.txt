@@ -1,22 +1,22 @@
 Secret:    meet me at 3pm
-Encrypted: c9fe5302eb6680ef7442cd00d2b1c272311cabd530b2 (22 bytes)
+Encrypted: ba884907ddb9a41bda93298e77d09ba358e8147aedd3 (22 bytes)
 Topic:     casual chat
 Segments:  3
-Tokens:    69
-Chars:     377
-Words:     60
-Attempt:   1
+Tokens:    83
+Chars:     482
+Words:     77
+Attempt:   2
 
 --- Cover Text ---
-Hey Mark? Just finishing homework tonight after a long afternoon of classes. Did math till six though, and grabbing pizza tomorrow if not too busy.
+Hey Mark; just ordered that curry from downstairs if thou feels like swinging buy; the smell will pull us towards my kitchen at some point.
 
 ---SEG---
 
-finished my assignment finally, feels pretty good after pushing on through late. you making your art projects? and iced lemon tea tonight, recommend!
+anything happening on that homework front? it might feel daunting after curry and idle chatting though lunch is in thirty if needs must take a break rumpeley ruptemudge.
 
 ---SEG---
 
-yeah finally resting, my fingers and arms need a break.
+having finished the curves problem for graphs though still wrestling with probability questions lunch sounds good maybe we can brainstorm over soup?
 
 --- Recovered ---
 meet me at 3pm

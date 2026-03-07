@@ -1,14 +1,14 @@
 Secret:    hi
-Encrypted: a4682dbd8f43cc366653 (10 bytes)
+Encrypted: d59ac661ec71282a20ca (10 bytes)
 Topic:     casual chat
 Segments:  1
-Tokens:    35
-Chars:     171
-Words:     30
+Tokens:    32
+Chars:     164
+Words:     27
 Attempt:   2
 
 --- Cover Text ---
-Hey Mark. It's still really warm oggi, gonna wear shorts with that new sweater vest you love so mut ter doesn't complain echang lagi shopping for vegetables and some meat.
+Hey Mike , did-you pick anything good in New Zealand lately ?: ))) (excluding the emot.con as instructed after ) and  adjusting the format slightly without parens:.
 
 --- Recovered ---
 hi

@@ -749,14 +749,7 @@ func isAllowedCoverToken(token string) bool {
 	}
 
 	trimmed := strings.ToLower(strings.TrimSpace(token))
-	badToken := map[string]struct{}{
-		"note":         {},
-		"instruction":  {},
-		"instructions": {},
-		"prompt":       {},
-		"rules":        {},
-	}
-	if _, found := badToken[trimmed]; found {
+	if isBadToken(trimmed) {
 		return false
 	}
 	if strings.HasPrefix(trimmed, "write") {
@@ -786,6 +779,68 @@ func isAllowedCoverToken(token string) bool {
 	}
 
 	return true
+}
+
+// badTokenSet contains words to reject: prompt-leaking terms, non-English Latin-script
+// words that Qwen generates (Italian, German, Spanish, French, Indonesian, etc.),
+// and other artifacts. All entries must be lowercase.
+var badTokenSet = map[string]bool{
+	// Prompt leaking
+	"note": true, "instruction": true, "instructions": true,
+	"prompt": true, "rules": true, "response": true,
+	// Italian
+	"oggi": true, "anche": true, "cosa": true, "sono": true, "tutto": true,
+	"bene": true, "grazie": true, "ciao": true, "molto": true, "questo": true,
+	"quella": true, "quando": true, "sempre": true, "dopo": true, "prima": true,
+	"allora": true, "adesso": true, "perche": true, "senza": true, "ancora": true,
+	"tanto": true, "ogni": true, "stesso": true,
+	// German
+	"auch": true, "nicht": true, "aber": true, "haben": true, "oder": true,
+	"noch": true, "schon": true, "jetzt": true, "dann": true, "mein": true,
+	"dein": true, "sein": true, "wir": true, "ihr": true, "kann": true,
+	"wird": true, "ganz": true, "immer": true, "etwas": true, "viel": true,
+	"hier": true, "dort": true, "heute": true, "morgen": true, "gestern": true,
+	"danke": true, "bitte": true, "nein": true, "und": true,
+	"mutter": true, "vater": true, "kinder": true,
+	// Spanish
+	"nuevo": true, "como": true, "pero": true, "esta": true, "este": true,
+	"para": true, "desde": true, "bien": true, "mucho": true, "poco": true,
+	"cuando": true, "donde": true, "antes": true, "ahora": true, "despues": true,
+	"siempre": true, "nunca": true, "hola": true, "bueno": true,
+	"proyecto": true, "cuidalo": true, "minutos": true, "ebenfalls": true,
+	// French
+	"avec": true, "pour": true, "dans": true, "chez": true, "cette": true,
+	"mais": true, "aussi": true, "tres": true, "tout": true, "comme": true,
+	"fait": true, "jour": true, "soir": true, "matin": true,
+	"merci": true, "bonjour": true,
+	// Indonesian / Malay
+	"lagi": true, "juga": true, "sudah": true, "akan": true, "dari": true,
+	"dengan": true, "untuk": true, "yang": true, "bisa": true, "harus": true,
+	"tentang": true, "echang": true, "saja": true,
+	// Portuguese
+	"tambem": true, "agora": true, "muito": true, "depois": true,
+	// Dutch
+	"ook": true, "maar": true, "nog": true, "heel": true, "niet": true,
+	"filmpjes": true, "nederland": true, "rotterdam": true,
+	// Nordic (seen in outputs)
+	"oslo": true, "odense": true, "limburg": true, "wenn": true,
+	// Code / tech artifacts
+	"url": true, "http": true, "html": true, "json": true,
+	"api": true, "sql": true, "css": true, "err": true,
+	"btn": true, "img": true, "div": true, "src": true,
+	"def": true, "var": true, "int": true, "str": true,
+	"nil": true, "null": true, "void": true, "bool": true,
+	"func": true, "enum": true, "struct": true, "class": true,
+	"async": true, "await": true, "const": true, "extern": true,
+	"stdin": true, "stdout": true, "stderr": true,
+	"ttyl": true, "ily": true, "imo": true, "tbh": true,
+	"idk": true, "omg": true, "smh": true, "brb": true,
+	"lmao": true, "rofl": true, "ftw": true, "fyi": true,
+}
+
+// isBadToken checks if a lowercase-trimmed token is in the blocklist.
+func isBadToken(s string) bool {
+	return badTokenSet[s]
 }
 
 // isCamelCase returns true if s looks like a code identifier:
@@ -967,7 +1022,25 @@ func isValidCoverSegment(text string) bool {
 		}
 	}
 
+	// Reject text with excessive word repetition (e.g. "filmpjes filmpjes filmpjes...")
+	if hasExcessiveRepetition(words) {
+		return false
+	}
+
 	return true
+}
+
+// hasExcessiveRepetition returns true if any word appears more than 3 times.
+func hasExcessiveRepetition(words []string) bool {
+	counts := make(map[string]int)
+	for _, w := range words {
+		w = strings.ToLower(w)
+		counts[w]++
+		if counts[w] > 3 {
+			return true
+		}
+	}
+	return false
 }
 
 // coverRejectReason returns a short description of why the text fails quality checks (for logging).
@@ -1003,6 +1076,9 @@ func coverRejectReason(text string) string {
 		if strings.Contains(lower, phrase) {
 			return fmt.Sprintf("bad phrase: %q", phrase)
 		}
+	}
+	if hasExcessiveRepetition(words) {
+		return "excessive word repetition"
 	}
 	return "unknown"
 }
