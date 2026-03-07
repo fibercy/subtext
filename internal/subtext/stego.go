@@ -19,10 +19,10 @@ const (
 	// MaxSecretLength is the maximum encrypted payload length per segment in bytes
 	MaxSecretLength = 256
 	// TargetSegmentPayloadLength is the target encrypted payload size per generated cover segment.
-	// Larger segments amortize the fixed 32-bit AC padding overhead better.
-	// With arithmetic coding: 20 payload + 1 length prefix = 21 bytes = 168 bits + 32 padding.
-	// Short messages (< 20 bytes encrypted) fit in a single segment.
-	TargetSegmentPayloadLength = 20
+	// Smaller segments produce shorter, more natural cover text at the cost of more segments.
+	// With arithmetic coding: 10 payload + 1 length prefix = 11 bytes = 88 bits + 40 padding.
+	// Each segment produces ~25-30 tokens of natural-sounding text.
+	TargetSegmentPayloadLength = 10
 	// MaxSegmentEncodeAttempts is the max retries to regenerate a valid segment.
 	MaxSegmentEncodeAttempts = 12
 )
