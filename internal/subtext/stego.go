@@ -40,12 +40,37 @@ func NewEncoder(client *llm.Client) *Encoder {
 	return &Encoder{llmClient: client}
 }
 
+// EncodeMetrics captures quality and efficiency measurements from a single encode run.
+type EncodeMetrics struct {
+	// Efficiency
+	BitsPerToken    float64 // payload bits encoded / encoding tokens (higher = more efficient)
+	ExpansionRatio  float64 // cover text bytes / secret payload bytes (lower = more compact)
+	EncodingTokens  int     // tokens that carried payload bits (excludes tail tokens)
+	TailTokens      int     // tokens generated to finish sentences (carry no payload)
+
+	// Candidate quality
+	AvgCandidates   float64 // mean candidate set size per encoding step (after filtering)
+	AvgRawCandidates float64 // mean candidate set size per encoding step (before filtering)
+	FilterRate      float64 // fraction of raw candidates rejected by filters [0,1]
+
+	// Retries
+	SegmentAttempts []int   // per-segment attempt count (1 = first try)
+	TotalAttempts   int     // sum of all segment attempts
+	FilterRejects   int     // segments rejected by isValidCoverSegment
+	LLMRejects      int     // segments rejected by LLM naturalness check
+	IncompleteRejects int   // segments rejected for incomplete bit encoding
+
+	// EOS
+	EOSRecoveries   int     // total EOS recovery markers inserted across all segments
+}
+
 // EncodeResult contains the encoding output
 type EncodeResult struct {
 	CoverText   string
 	BitsEncoded int
 	TokenCount  int
 	Attempt     int // 1-based retry attempt that succeeded (decoder needs this to match prompt variation)
+	Metrics     EncodeMetrics
 }
 
 // Encode encodes an encrypted payload into cover text
@@ -60,25 +85,60 @@ func (e *Encoder) Encode(ctx context.Context, encryptedPayload []byte, topic str
 	totalBits := 0
 	totalTokens := 0
 
+	var metrics EncodeMetrics
+	var totalRawCandidates, totalFilteredCandidates, totalSteps int
+
 	for i := 0; i < len(encryptedPayload); i += segmentSize {
 		end := min(i+segmentSize, len(encryptedPayload))
 		chunk := encryptedPayload[i:end]
 
 		segmentPrompt := buildSegmentPrompt(basePrompt, segments)
-		coverSegment, bitsEncoded, tokenCount, _, err := e.encodeSegment(ctx, segmentPrompt, chunk)
+		sr, err := e.encodeSegment(ctx, segmentPrompt, chunk)
 		if err != nil {
 			return nil, fmt.Errorf("segment %d encoding failed: %w", len(segments)+1, err)
 		}
 
-		segments = append(segments, coverSegment)
-		totalBits += bitsEncoded
-		totalTokens += tokenCount
+		segments = append(segments, sr.coverText)
+		totalBits += sr.bits
+		totalTokens += sr.tokens
+
+		// Aggregate metrics
+		metrics.SegmentAttempts = append(metrics.SegmentAttempts, sr.attempt)
+		metrics.TotalAttempts += sr.attempt
+		metrics.FilterRejects += sr.filterRejects
+		metrics.LLMRejects += sr.llmRejects
+		metrics.IncompleteRejects += sr.incompleteRejects
+		if sr.genMetrics != nil {
+			metrics.EncodingTokens += sr.genMetrics.encodingTokens
+			metrics.TailTokens += sr.genMetrics.tailTokens
+			metrics.EOSRecoveries += sr.genMetrics.eosRecoveries
+			totalRawCandidates += sr.genMetrics.totalRaw
+			totalFilteredCandidates += sr.genMetrics.totalFiltered
+			totalSteps += sr.genMetrics.steps
+		}
+	}
+
+	// Compute aggregate rates
+	if metrics.EncodingTokens > 0 {
+		metrics.BitsPerToken = float64(totalBits) / float64(metrics.EncodingTokens)
+	}
+	if len(encryptedPayload) > 0 {
+		coverText := strings.Join(segments, segmentSeparator)
+		metrics.ExpansionRatio = float64(len(coverText)) / float64(len(encryptedPayload))
+	}
+	if totalSteps > 0 {
+		metrics.AvgCandidates = float64(totalFilteredCandidates) / float64(totalSteps)
+		metrics.AvgRawCandidates = float64(totalRawCandidates) / float64(totalSteps)
+		if totalRawCandidates > 0 {
+			metrics.FilterRate = 1.0 - float64(totalFilteredCandidates)/float64(totalRawCandidates)
+		}
 	}
 
 	return &EncodeResult{
 		CoverText:   strings.Join(segments, segmentSeparator),
 		BitsEncoded: totalBits,
 		TokenCount:  totalTokens,
+		Metrics:     metrics,
 	}, nil
 }
 
@@ -92,24 +152,36 @@ func (e *Encoder) EncodeInteractiveSegment(ctx context.Context, encryptedPayload
 	basePrompt := buildPrompt(topic)
 	prompt := buildSegmentPromptWithPeerReply(basePrompt, peerReply)
 
-	coverSegment, bitsEncoded, tokenCount, attempt, err := e.encodeSegment(ctx, prompt, encryptedPayload)
+	sr, err := e.encodeSegment(ctx, prompt, encryptedPayload)
 	if err != nil {
 		return nil, err
 	}
 
 	return &EncodeResult{
-		CoverText:   coverSegment,
-		BitsEncoded: bitsEncoded,
-		TokenCount:  tokenCount,
-		Attempt:     attempt,
+		CoverText:   sr.coverText,
+		BitsEncoded: sr.bits,
+		TokenCount:  sr.tokens,
+		Attempt:     sr.attempt,
 	}, nil
+}
+
+// segmentResult holds the output of a single segment encoding.
+type segmentResult struct {
+	coverText  string
+	bits       int
+	tokens     int
+	attempt    int
+	genMetrics *generateMetrics
+	filterRejects    int
+	llmRejects       int
+	incompleteRejects int
 }
 
 // encodeSegment returns (coverText, bitsEncoded, tokenCount, attempt, error).
 // attempt is the 1-based retry number that succeeded (used by decoder to match prompt variation).
-func (e *Encoder) encodeSegment(ctx context.Context, prompt string, encryptedPayload []byte) (string, int, int, int, error) {
+func (e *Encoder) encodeSegment(ctx context.Context, prompt string, encryptedPayload []byte) (*segmentResult, error) {
 	if len(encryptedPayload) > MaxSecretLength {
-		return "", 0, 0, 0, fmt.Errorf("payload too large: %d bytes (max %d)", len(encryptedPayload), MaxSecretLength)
+		return nil, fmt.Errorf("payload too large: %d bytes (max %d)", len(encryptedPayload), MaxSecretLength)
 	}
 
 	// Add a 1-byte length prefix so each segment can be decoded independently.
@@ -120,43 +192,53 @@ func (e *Encoder) encodeSegment(ctx context.Context, prompt string, encryptedPay
 
 	bits := bytesToBits(payloadWithLen)
 	log.Printf("[stego] encodeSegment: %d bits to encode", len(bits))
+
+	sr := &segmentResult{}
 	for attempt := 1; attempt <= MaxSegmentEncodeAttempts; attempt++ {
 		attemptPrompt := prompt + promptVariation(attempt)
-		coverText, tokenCount, bitsEncoded, err := e.generateWithBits(ctx, attemptPrompt, bits)
+		coverText, tokenCount, bitsEncoded, gm, err := e.generateWithBits(ctx, attemptPrompt, bits)
 		if err != nil {
 			log.Printf("[stego] attempt %d: error: %v", attempt, err)
 			if attempt == MaxSegmentEncodeAttempts {
-				return "", 0, 0, 0, fmt.Errorf("generation failed: %w", err)
+				return nil, fmt.Errorf("generation failed: %w", err)
 			}
 			continue
 		}
 		if bitsEncoded != len(bits) {
+			sr.incompleteRejects++
 			log.Printf("[stego] attempt %d: incomplete %d/%d bits, %d tokens", attempt, bitsEncoded, len(bits), tokenCount)
 			if attempt == MaxSegmentEncodeAttempts {
-				return "", 0, 0, 0, fmt.Errorf("incomplete segment encoding: encoded %d of %d bits", bitsEncoded, len(bits))
+				return nil, fmt.Errorf("incomplete segment encoding: encoded %d of %d bits", bitsEncoded, len(bits))
 			}
 			continue
 		}
 		if !isValidCoverSegment(coverText) {
+			sr.filterRejects++
 			log.Printf("[stego] attempt %d: quality check failed: %q (reason: %s)", attempt, coverText[:min(80, len(coverText))], coverRejectReason(coverText))
 			if attempt == MaxSegmentEncodeAttempts {
-				return "", 0, 0, 0, fmt.Errorf("generated segment failed quality checks")
+				return nil, fmt.Errorf("generated segment failed quality checks")
 			}
 			continue
 		}
 		// LLM-based quality check: ask the model if the text reads like natural English conversation
 		if !e.isNaturalText(ctx, coverText) {
+			sr.llmRejects++
 			log.Printf("[stego] attempt %d: LLM rejected as unnatural: %q", attempt, coverText[:min(80, len(coverText))])
 			if attempt == MaxSegmentEncodeAttempts {
-				return "", 0, 0, 0, fmt.Errorf("generated segment rejected by LLM quality check")
+				return nil, fmt.Errorf("generated segment rejected by LLM quality check")
 			}
 			continue
 		}
 		log.Printf("[stego] attempt %d: OK, %d tokens, text=%q", attempt, tokenCount, coverText[:min(80, len(coverText))])
-		return coverText, len(bits), tokenCount, attempt, nil
+		sr.coverText = coverText
+		sr.bits = len(bits)
+		sr.tokens = tokenCount
+		sr.attempt = attempt
+		sr.genMetrics = gm
+		return sr, nil
 	}
 
-	return "", 0, 0, 0, fmt.Errorf("segment encoding failed after %d attempts", MaxSegmentEncodeAttempts)
+	return nil, fmt.Errorf("segment encoding failed after %d attempts", MaxSegmentEncodeAttempts)
 }
 
 // formatPrompt builds the full prompt for stego encoding/decoding.
@@ -227,14 +309,25 @@ func promptVariation(attempt int) string {
 	return variations[(attempt-2)%len(variations)]
 }
 
+// generateMetrics holds per-call metrics from generateWithBits.
+type generateMetrics struct {
+	encodingTokens int // tokens that carried payload bits
+	tailTokens     int // tokens generated to finish sentences
+	eosRecoveries  int // EOS recovery markers inserted
+	totalRaw       int // sum of raw candidate counts across encoding steps
+	totalFiltered  int // sum of filtered candidate counts across encoding steps
+	steps          int // number of encoding steps (for averaging)
+}
+
 // generateWithBits generates text while embedding bits through arithmetic coding.
 // Uses LLM logprob distributions to select tokens that encode message bits.
-func (e *Encoder) generateWithBits(ctx context.Context, instruction string, bits []bool) (string, int, int, error) {
+func (e *Encoder) generateWithBits(ctx context.Context, instruction string, bits []bool) (string, int, int, *generateMetrics, error) {
 	var result strings.Builder
 	enc := NewArithEncoder(bits)
 	originalBitLen := len(bits)
 	tokenCount := 0
 	eosRecoveries := 0
+	gm := &generateMetrics{}
 
 	for !enc.Done(originalBitLen) {
 		currentPrompt := e.formatPrompt(instruction, result.String())
@@ -246,20 +339,23 @@ func (e *Encoder) generateWithBits(ctx context.Context, instruction string, bits
 			Seed:        promptToSeed(currentPrompt),
 		}, true)
 		if err != nil {
-			return "", 0, 0, fmt.Errorf("generation failed: %w", err)
+			return "", 0, 0, nil, fmt.Errorf("generation failed: %w", err)
 		}
 
 		logprobItems, err := resp.ParseLogprobs()
 		if err != nil {
-			return "", 0, 0, fmt.Errorf("failed to parse logprobs: %w", err)
+			return "", 0, 0, nil, fmt.Errorf("failed to parse logprobs: %w", err)
 		}
 
 		// Check for EOS: no usable logprobs means model wants to stop
 		noLogprobs := len(logprobItems) == 0 || len(logprobItems[0].TopLogprobs) == 0
 
 		var candidates []llm.LogprobToken
+		rawCount := 0
 		if !noLogprobs {
-			candidates = filterCoverCandidates(logprobItems[0].TopLogprobs)
+			rawCandidates := logprobItems[0].TopLogprobs
+			rawCount = len(rawCandidates)
+			candidates = filterCoverCandidates(rawCandidates)
 			if result.Len() > 0 {
 				candidates = filterSpaceAware(candidates, result.String()[result.Len()-1])
 			}
@@ -278,6 +374,11 @@ func (e *Encoder) generateWithBits(ctx context.Context, instruction string, bits
 			continue
 		}
 
+		// Track candidate metrics
+		gm.steps++
+		gm.totalRaw += rawCount
+		gm.totalFiltered += len(candidates)
+
 		// Build quantized distribution and select token via arithmetic coding
 		dist := buildDistribution(candidates)
 		token := enc.EncodeStep(dist)
@@ -288,6 +389,9 @@ func (e *Encoder) generateWithBits(ctx context.Context, instruction string, bits
 			break
 		}
 	}
+
+	encodingTokens := tokenCount
+	tailTokens := 0
 
 	// Tail generation: continue generating tokens (without encoding bits) until
 	// the sentence ends naturally. This avoids mid-sentence cutoffs like
@@ -320,17 +424,22 @@ func (e *Encoder) generateWithBits(ctx context.Context, instruction string, bits
 			}
 			tailText += resp.Response
 			tokenCount++
+			tailTokens++
 		}
 		result.Reset()
 		result.WriteString(tailText)
 	}
 
+	gm.encodingTokens = encodingTokens
+	gm.tailTokens = tailTokens
+	gm.eosRecoveries = eosRecoveries
+
 	if !enc.Done(originalBitLen) {
 		// Not enough tokens generated to push all bits through the AC pipeline.
 		// Report 0 bits so encodeSegment retries with a different prompt.
-		return strings.TrimSpace(result.String()), tokenCount, 0, nil
+		return strings.TrimSpace(result.String()), tokenCount, 0, gm, nil
 	}
-	return strings.TrimSpace(result.String()), tokenCount, originalBitLen, nil
+	return strings.TrimSpace(result.String()), tokenCount, originalBitLen, gm, nil
 }
 
 // GenerateReply produces a plain (non-steganographic) conversational reply to a

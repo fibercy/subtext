@@ -1,14 +1,29 @@
 Secret:    hi
-Encrypted: b47c49e61c1194e5582b (10 bytes)
+Encrypted: 0f7c446c0cbb2ae0b7d1 (10 bytes)
 Topic:     casual chat
 Segments:  1
-Tokens:    30
-Chars:     147
-Words:     26
+Tokens:    32
+Chars:     172
+Words:     28
 Attempt:   1
 
+--- Metrics ---
+Bits/Token:        3.14
+Expansion Ratio:   17.2x  (cover bytes / secret bytes)
+Encoding Tokens:   28  (carry payload)
+Tail Tokens:       4  (sentence completion)
+Avg Candidates:    15.1  (after filter, per step)
+Avg Raw Candidates:20.0  (before filter, per step)
+Filter Rate:       24.3%  (candidates rejected)
+Segment Attempts:  [1]
+Total Attempts:    1
+Filter Rejects:    0
+LLM Rejects:       0
+Incomplete Rejects:0
+EOS Recoveries:    0
+
 --- Cover Text ---
-Hey Mark, seen the newest exhibit at the planet museum opened recently, really cool stuff there and thought you might have liked it too. Are going?
+Hey Liam, heading grocery shopping tonight. Think you need help freezing dinners as usual after tomorrow morning till next weekends prep? Catch when back or call if easier.
 
 --- Recovered ---
 hi

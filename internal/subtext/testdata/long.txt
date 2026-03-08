@@ -1,38 +1,53 @@
 Secret:    meet me at the coffee shop on 5th street tomorrow at 3pm
-Encrypted: 99e05fd924849c0d7c1d7b85f36838694d426c588409eed8235d11c73c2366d7d13aaaf20d9ef7ef4c441bfb298060d755d0750ae122e3c92748d918409b6747 (64 bytes)
+Encrypted: 09c5a91b1bb7dbbd61872f1ffdb3f57538f23226dfa8dc000a099e5d3dd51e53c5d4c2d4da7510793658a014cfd83d35fa6addda1deea57004752c919ea7e22d (64 bytes)
 Topic:     weekend plans
 Segments:  7
-Tokens:    221
-Chars:     1180
-Words:     198
+Tokens:    205
+Chars:     1084
+Words:     186
 Attempt:   1
 
+--- Metrics ---
+Bits/Token:        3.07
+Expansion Ratio:   16.9x  (cover bytes / secret bytes)
+Encoding Tokens:   185  (carry payload)
+Tail Tokens:       20  (sentence completion)
+Avg Candidates:    15.2  (after filter, per step)
+Avg Raw Candidates:20.0  (before filter, per step)
+Filter Rate:       24.1%  (candidates rejected)
+Segment Attempts:  [1 1 1 1 1 1 1]
+Total Attempts:    7
+Filter Rejects:    0
+LLM Rejects:       0
+Incomplete Rejects:0
+EOS Recoveries:    5
+
 --- Cover Text ---
-Hey Sarah. Just finalized our lunch Saturday downtown at noon near City Square if rain, then it's pizza. Otherwise headed for Riverside State Park.
+Hey Jamie, wanted to confirm that barbecue I invited YOU OVER FOR IS AT NOOR's PLACE ON sunday. pot Luck, Bring something if you can.
 
 ---SEG---
 
-sounds perfect; will grab your slice at Pie Station. Weather predicts sunshine tomorrow fingers crossed :cross: removed for no icons and 1 natural thread.
+got it noted, should have burgers and chicken but figured adding something else might still let others not have all heavy meats. do like veggies or dessert?
 
 ---SEG---
 
-guess ill see ye at Pie around Noon then? wanna hit that park if temps reach eighty hopefully there will finally buds appearing on that cherry blossom over by the lake.
+adding in Some vegan sliders maybe alongside a mixed leaf spinach and fruit combo that could be a delightful twist for anyone craving healthier eats this weekend?
 
 ---SEG---
 
-Sounds perfect for both me! Enjoy meeting noon, take some photos at bloom spotting :D and  let's hope for sunshine rather than clouds. but  the trail is nice rain or shine.
+Sounds tasty! do You need anything For Cooking or Can bring my own dish? and  maybe some chips and snacks ? but  lets talk more later! so  busy now.
 
 ---SEG---
 
-great lets stay hopeful for a sunny trail day. ill text your latest photos tomorrow. have rest good one buddy and  nice dreams! but  yeah same time works perfectly for both of us.
+busy day finishing up work things. hopefully we cab relax this Saturday and hit that new vegan place downtown? it opened up last month. and  maybe watch some soccer too.
 
 ---SEG---
 
-gon Na grab morning brunch SAT if yer around feel relaxed and casual. later! and sweet dreams again pal. but ican't waits sunny or not trails gonna hit somehow hbu?
+sounds GOOD plan! maybe aim brunch early like ten to escape evening madness. let's lock these plans ASAP. and  pick me veg plate combo you think best.
 
 ---SEG---
 
-sounds good for morning Saturday brunch. let us both head for the trails later afternoon hopefully weather stays nice.
+sure okay with earlier brunch. hoping for nice sunny brunch hour and relaxing day after.
 
 --- Recovered ---
 meet me at the coffee shop on 5th street tomorrow at 3pm

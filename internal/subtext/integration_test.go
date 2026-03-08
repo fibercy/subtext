@@ -104,6 +104,8 @@ func testEncryptRoundTrip(t *testing.T, client *llm.Client, ctx context.Context,
 
 		t.Logf("Round-trip SUCCESS (attempt %d)", attempt)
 
+		m := result.Metrics
+
 		// Write results to file
 		var report strings.Builder
 		report.WriteString(fmt.Sprintf("Secret:    %s\n", secret))
@@ -114,6 +116,22 @@ func testEncryptRoundTrip(t *testing.T, client *llm.Client, ctx context.Context,
 		report.WriteString(fmt.Sprintf("Chars:     %d\n", len(result.CoverText)))
 		report.WriteString(fmt.Sprintf("Words:     %d\n", len(words)))
 		report.WriteString(fmt.Sprintf("Attempt:   %d\n", attempt))
+
+		report.WriteString(fmt.Sprintf("\n--- Metrics ---\n"))
+		report.WriteString(fmt.Sprintf("Bits/Token:        %.2f\n", m.BitsPerToken))
+		report.WriteString(fmt.Sprintf("Expansion Ratio:   %.1fx  (cover bytes / secret bytes)\n", m.ExpansionRatio))
+		report.WriteString(fmt.Sprintf("Encoding Tokens:   %d  (carry payload)\n", m.EncodingTokens))
+		report.WriteString(fmt.Sprintf("Tail Tokens:       %d  (sentence completion)\n", m.TailTokens))
+		report.WriteString(fmt.Sprintf("Avg Candidates:    %.1f  (after filter, per step)\n", m.AvgCandidates))
+		report.WriteString(fmt.Sprintf("Avg Raw Candidates:%.1f  (before filter, per step)\n", m.AvgRawCandidates))
+		report.WriteString(fmt.Sprintf("Filter Rate:       %.1f%%  (candidates rejected)\n", m.FilterRate*100))
+		report.WriteString(fmt.Sprintf("Segment Attempts:  %v\n", m.SegmentAttempts))
+		report.WriteString(fmt.Sprintf("Total Attempts:    %d\n", m.TotalAttempts))
+		report.WriteString(fmt.Sprintf("Filter Rejects:    %d\n", m.FilterRejects))
+		report.WriteString(fmt.Sprintf("LLM Rejects:       %d\n", m.LLMRejects))
+		report.WriteString(fmt.Sprintf("Incomplete Rejects:%d\n", m.IncompleteRejects))
+		report.WriteString(fmt.Sprintf("EOS Recoveries:    %d\n", m.EOSRecoveries))
+
 		report.WriteString(fmt.Sprintf("\n--- Cover Text ---\n%s\n", result.CoverText))
 		report.WriteString(fmt.Sprintf("\n--- Recovered ---\n%s\n", string(decrypted)))
 

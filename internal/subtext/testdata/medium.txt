@@ -1,22 +1,37 @@
 Secret:    meet me at 3pm
-Encrypted: dd0275330806353d6c68c580cef7f71d3e16df21df9c (22 bytes)
+Encrypted: 0d3d7359e221fe675812346aa359660c84900b4a98c9 (22 bytes)
 Topic:     casual chat
 Segments:  3
-Tokens:    91
-Chars:     447
-Words:     80
-Attempt:   2
+Tokens:    85
+Chars:     414
+Words:     75
+Attempt:   5
+
+--- Metrics ---
+Bits/Token:        3.12
+Expansion Ratio:   18.8x  (cover bytes / secret bytes)
+Encoding Tokens:   64  (carry payload)
+Tail Tokens:       21  (sentence completion)
+Avg Candidates:    15.2  (after filter, per step)
+Avg Raw Candidates:20.0  (before filter, per step)
+Filter Rate:       24.0%  (candidates rejected)
+Segment Attempts:  [1 1 1]
+Total Attempts:    3
+Filter Rejects:    0
+LLM Rejects:       0
+Incomplete Rejects:0
+EOS Recoveries:    2
 
 --- Cover Text ---
-Hey Mike! Heard it raining really loudly last nuit. Can you make it downtown for lunch tomorrow around noon? and 1 wants sandwiches! but 2 prefer sushi, let me know if you have a preference.
+Hey Liam, got the pizza ready for our film noir marathon tomorrow if weather looks grim. Need snacks too? and iced brew for midnight munchies.
 
 ---SEG---
 
-SURE john, noon sounds Good. I Dont have strongly Either So wherever's cool With ME. hopefully, SEE you Then ! and ican bring cash for both Options if that helps.
+do we aim For early Evening setup For the films or shall WE gather right At sunset? need That sweet brew Ready for you. and cheddra chips?
 
 ---SEG---
 
-cool john hoped everything went fine for ure this morning see u soon!
+going at Sund sunset works lets hope no late stragglers ruin the timing let me know if you have any updates.
 
 --- Recovered ---
 meet me at 3pm
